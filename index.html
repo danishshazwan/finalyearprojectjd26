@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent: #00e5b4;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.6);
+  --dim2: rgba(255,255,255,0.2);
+  --line: rgba(255,255,255,0.1);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── LEFT COLUMN ── */
+.left {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 64px;
+  border-right: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  width: 50%;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) { .left { display: flex; } }
+
+.diagonal-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #2B2BFF 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.left-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown 0.8s ease both;
+}
+
+.brand-icon {
+  width: 32px; height: 32px;
+  color: var(--accent);
+}
+
+.brand-name {
+  font-family: 'Bebas Neue';
+  font-size: 1.5rem;
+  letter-spacing: 6px;
+  color: var(--fg);
+}
+
+.left-body {
+  position: relative;
+  z-index: 1;
+}
+
+.left-heading {
+  font-family: 'Bebas Neue';
+  font-size: clamp(3rem, 5vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.left-heading span { color: var(--accent); }
+
+.left-sub {
+  font-size: 1rem;
+  color: var(--dim);
+  line-height: 1.7;
+  max-width: 380px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+
+.left-stats {
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono';
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+}
+
+.stat-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.left-img {
+  position: relative; z-index: 1;
+  animation: fadeUp 0.8s 0.6s ease both;
+}
+.left-img img {
+  width: 100%; height: 120px;
+  object-fit: cover;
+  opacity: 0.25;
+  filter: grayscale(1);
+  border-radius: 8px;
+}
+
+/* ── RIGHT COLUMN ── */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 32px;
+  overflow-y: auto;
+}
+
+.right-inner {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.right-header {
+  margin-bottom: 48px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+
+.right-title {
+  font-family: 'Bebas Neue';
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+
+.right-sub {
+  font-size: 1rem;
+  color: var(--dim);
+}
+
+/* ── ROLE CARDS ── */
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+.role-btn {
+  width: 100%;
+  padding: 22px 24px;
+  border: 2px solid var(--dim2);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.3s, background 0.3s;
+  text-align: left;
+}
+
+.role-btn:hover {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.04);
+}
+
+.role-btn-label {
+  font-family: 'Bebas Neue';
+  font-size: 1.25rem;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+
+.role-btn-desc {
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+}
+
+.role-arrow {
+  width: 20px; height: 20px;
+  stroke: var(--accent);
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+.role-btn:hover .role-arrow { transform: translateX(4px); }
+
+/* ── FORM ── */
+.form-wrap { animation: fadeUp 0.5s ease both; }
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-family: 'DM Mono';
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  margin-bottom: 36px;
+  padding: 0;
+  transition: color 0.3s;
+}
+.back-btn:hover { color: var(--accent); }
+.back-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+
+.form-group { margin-bottom: 22px; }
+
+.form-label {
+  display: block;
+  font-family: 'Bebas Neue';
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--dim2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: var(--fg);
+  font-family: 'DM Mono';
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.form-input::placeholder { color: rgba(255,255,255,0.3); }
+.form-input:focus { border-color: var(--accent); }
+
+.submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Bebas Neue';
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.3s, opacity 0.3s;
+}
+.submit-btn:hover { background: #fff; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.form-note {
+  font-family: 'DM Mono';
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* success */
+.success-wrap {
+  text-align: center;
+  animation: fadeUp 0.6s ease both;
+}
+.success-icon {
+  width: 60px; height: 60px;
+  background: rgba(0,229,180,0.12);
+  border: 1px solid rgba(0,229,180,0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+.success-icon svg { width: 28px; height: 28px; stroke: var(--accent); }
+.success-title {
+  font-family: 'Bebas Neue';
+  font-size: 2rem;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+.success-sub {
+  font-family: 'DM Mono';
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1px;
+}
+
+/* hidden */
+.hidden { display: none !important; }
+
+/* animations */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="diagonal-grid"></div>
+
+  <div class="left-brand">
+    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span class="brand-name">SMARTCONVO</span>
+  </div>
+
+  <div class="left-body">
+    <h2 class="left-heading">Dean's<br><span>Award</span><br>Ceremony</h2>
+    <p class="left-sub">Join us in celebrating excellence in Big Data Analysis, Machine Learning, and Technology Innovation.</p>
+    <div class="left-stats">
+      <div class="stat-item"><div class="stat-dot"></div>2026 Award Year</div>
+      <div class="stat-item"><div class="stat-dot"></div>12+ Categories</div>
+      <div class="stat-item"><div class="stat-dot"></div>50+ Nominees</div>
+    </div>
+  </div>
+
+  <div class="left-img">
+    <img src="https://static.wixstatic.com/media/611fdf_9770984919b2487eafe40dd42197fceb~mv2.png" alt="ceremony">
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="right-inner">
+
+    <!-- Header -->
+    <div class="right-header">
+      <h1 class="right-title">Welcome</h1>
+      <p class="right-sub">Select your role to get started</p>
+    </div>
+
+    <!-- Step 1: Role Selection -->
+    <div id="step-role" class="role-list">
+      <button class="role-btn" onclick="selectRole('guest')">
+        <div>
+          <div class="role-btn-label">Guest</div>
+          <div class="role-btn-desc">Browse awards and categories</div>
+        </div>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+
+      <button class="role-btn" onclick="selectRole('student')">
+        <div>
+          <div class="role-btn-label">Student</div>
+          <div class="role-btn-desc">Submit your project and participate</div>
+        </div>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+
+      <button class="role-btn" onclick="window.location.href='/admin/login'">
+        <div>
+          <div class="role-btn-label">Admin</div>
+          <div class="role-btn-desc">Manage awards and categories</div>
+        </div>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Step 2: Form -->
+    <div id="step-form" class="form-wrap hidden">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back
+      </button>
+
+      <form onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" name="name" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group hidden" id="student-id-group">
+          <label class="form-label">Student ID</label>
+          <input class="form-input" type="text" name="studentId" placeholder="Enter your student ID">
+        </div>
+        <button class="submit-btn" type="submit" id="submit-btn">Continue</button>
+      </form>
+
+      <p class="form-note" id="form-note"></p>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div id="step-success" class="success-wrap hidden">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <div class="success-title">You're In!</div>
+      <p class="success-sub" id="success-msg">Redirecting you now...</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentRole = null;
+
+function selectRole(role) {
+  currentRole = role;
+  document.getElementById('step-role').classList.add('hidden');
+  document.getElementById('step-form').classList.remove('hidden');
+
+  const studentGroup = document.getElementById('student-id-group');
+  const note = document.getElementById('form-note');
+  const studentIdInput = studentGroup.querySelector('input');
+
+  if (role === 'student') {
+    studentGroup.classList.remove('hidden');
+    studentIdInput.required = true;
+    note.textContent = 'Submit your project for consideration';
+  } else {
+    studentGroup.classList.add('hidden');
+    studentIdInput.required = false;
+    note.textContent = 'Browse all award categories and nominees';
+  }
+}
+
+function goBack() {
+  currentRole = null;
+  document.getElementById('step-form').classList.add('hidden');
+  document.getElementById('step-role').classList.remove('hidden');
+}
+
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Signing In...';
+
+  setTimeout(() => {
+    const data = new FormData(e.target);
+    localStorage.setItem('userType', currentRole);
+    localStorage.setItem('userName', data.get('name'));
+    localStorage.setItem('userEmail', data.get('email'));
+    if (currentRole === 'student') localStorage.setItem('studentId', data.get('studentId'));
+
+    document.getElementById('step-form').classList.add('hidden');
+    const success = document.getElementById('step-success');
+    success.classList.remove('hidden');
+    document.getElementById('success-msg').textContent =
+      `Signed in as ${currentRole.charAt(0).toUpperCase() + currentRole.slice(1)} — redirecting to /home`;
+
+    // setTimeout(() => window.location.href = '/home', 1500);
+  }, 1000);
+}
+</script>
+</body>
+</html>
