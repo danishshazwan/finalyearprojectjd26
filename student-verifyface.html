@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMARTCONVO — Verify Face</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --accent:#00e5b4;
+      --bg:#06080b;
+      --fg:#e8eaf0;
+      --dim:rgba(255,255,255,0.55);
+      --line:rgba(255,255,255,0.08);
+      --card:rgba(255,255,255,0.03);
+      --gold:#f0c040;
+    }
+    html{ scroll-behavior:smooth; }
+    body{
+      background:var(--bg);
+      color:var(--fg);
+      font-family:'Syne', sans-serif;
+      min-height:100vh;
+      overflow-y:auto;
+    }
+    body::before{
+      content:''; position:fixed; inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:0.025; pointer-events:none; z-index:9999;
+    }
+
+    nav{
+      position:sticky; top:0; z-index:100;
+      background:rgba(6,8,11,0.85);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--line);
+      padding:0 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      height:64px;
+      animation:fadeDown 0.6s ease both;
+    }
+    .nav-brand{ display:flex; align-items:center; gap:10px; }
+    .nav-brand svg{ width:24px; height:24px; color:var(--accent); }
+    .nav-brand span{ font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+    .nav-right{ display:flex; align-items:center; gap:12px; }
+    .nav-badge{ background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.25); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:var(--accent); }
+    .nav-user{ font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color:rgba(255,255,255,0.55); display:none; }
+    @media(min-width:768px){ .nav-user{display:block} }
+    .nav-logout{ background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+    .nav-logout:hover{ border-color:var(--accent); color:var(--accent); }
+
+    .layout{ display:flex; min-height:calc(100vh - 64px); }
+    .sidebar{
+      width:260px;
+      flex-shrink:0;
+      border-right:1px solid var(--line);
+      background:rgba(255,255,255,0.01);
+      padding:28px 18px;
+      position:sticky;
+      top:64px;
+      height:calc(100vh - 64px);
+      overflow-y:auto;
+    }
+    .main{ flex:1; min-height:100vh; overflow-y:auto; }
+
+    .sb-brand{ display:flex; align-items:center; gap:12px; margin-bottom:24px; padding:0 8px; }
+    .sb-brand-dot{ width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(0,229,180,0.08); }
+    .sb-brand-title{ font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color:rgba(255,255,255,0.65); }
+    .sb-section{ display:flex; flex-direction:column; gap:10px; padding:0 8px; }
+
+    .sb-link{
+      width:100%;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      color:var(--fg);
+      border-radius:12px;
+      padding:12px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      transition:all 0.3s;
+      text-decoration:none;
+    }
+    .sb-link:hover{ border-color:rgba(0,229,180,0.35); background:rgba(0,229,180,0.06); transform:translateX(4px); }
+    .sb-icon{ width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,180,0.08); color:var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+    .sb-text{ font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color:rgba(255,255,255,0.72); }
+
+    .sb-footer{ margin-top:28px; border-top:1px solid var(--line); padding-top:18px; padding-left:8px; padding-right:8px; }
+    .sb-footer-label{ font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color:rgba(255,255,255,0.35); margin-bottom:8px; }
+    .sb-footer-name{ font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color:var(--accent); }
+
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      .sidebar { width:100%; position:relative; top:auto; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+      .main { min-height:auto; }
+    }
+
+    @keyframes fadeUp{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown{ from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+
+    .page{ padding:44px 32px 80px; max-width:980px; margin:0 auto; }
+    .page-title{ font-family:'Bebas Neue'; font-size:clamp(2rem,4vw,3rem); letter-spacing:3px; margin-bottom:10px; animation:fadeUp 0.5s ease both; }
+    .page-title span{ color:var(--accent); }
+    .page-sub{ font-size:0.9rem; color:var(--dim); margin-bottom:22px; line-height:1.7; animation:fadeUp 0.5s 0.1s ease both; }
+
+    .grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:18px; }
+    @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:28px;
+      animation:fadeUp 0.5s 0.2s ease both;
+    }
+
+    .camera-shell{
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(255,255,255,0.02);
+    }
+    video{ width:100%; height:auto; display:block; background:#000; }
+
+    .status-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; }
+    .pill{
+      border-radius:100px;
+      padding:6px 12px;
+      font-family:'DM Mono';
+      font-size:0.65rem;
+      letter-spacing:2px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.03);
+      color:rgba(255,255,255,0.75);
+    }
+    .pill::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(0,229,180,0.08); }
+
+    .primary{
+      width:100%;
+      background:var(--accent);
+      color:#06080b;
+      border:none;
+      border-radius:10px;
+      padding:16px;
+      font-family:'Bebas Neue';
+      font-size:1.1rem;
+      letter-spacing:4px;
+      cursor:pointer;
+      transition:all 0.3s;
+      margin-top:10px;
+    }
+    .primary:hover{ background:#fff; transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,229,180,0.25); }
+    .primary:disabled{ opacity:0.55; cursor:not-allowed; transform:none; }
+
+    .ghost{
+      width:100%;
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.12);
+      color:rgba(255,255,255,0.7);
+      border-radius:10px;
+      padding:12px 12px;
+      cursor:pointer;
+      font-family:'DM Mono';
+      font-size:0.75rem;
+      letter-spacing:2px;
+      transition:all 0.3s;
+      margin-top:10px;
+    }
+    .ghost:hover{ border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+
+    .help{ font-family:'DM Mono'; font-size:0.72rem; color:rgba(255,255,255,0.45); margin-top:12px; line-height:1.7; }
+
+    .toast{
+      position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:rgba(0,229,180,0.1);
+      border:1px solid rgba(0,229,180,0.3);
+      border-radius:10px;
+      padding:14px 24px;
+      font-family:'DM Mono';
+      font-size:0.75rem;
+      letter-spacing:2px;
+      color:var(--accent);
+      opacity:0; transition:all 0.4s;
+      pointer-events:none; z-index:1000; white-space:nowrap;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    footer{
+      border-top:1px solid var(--line);
+      padding:40px 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:16px;
+      max-width:1200px;
+      margin:0 auto;
+      background:transparent;
+    }
+    .footer-brand{ display:flex; align-items:center; gap:10px; }
+    .footer-brand svg{ width:20px; height:20px; color:var(--accent); }
+    .footer-brand span{ font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+    .footer-copy{ font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+    .list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+    .li{
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      border-radius:12px;
+      padding:12px 12px;
+      font-family:'DM Mono';
+      font-size:0.72rem;
+      letter-spacing:1px;
+      color:rgba(255,255,255,0.55);
+      line-height:1.7;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/>
+        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+      </svg>
+      <span>SMARTCONVO</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge">STUDENT</span>
+      <span class="nav-user" id="nav-user">—</span>
+      <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Student Sidebar">
+      <div class="sb-brand">
+        <div class="sb-brand-dot" aria-hidden="true"></div>
+        <div class="sb-brand-title">Menu</div>
+      </div>
+
+      <div class="sb-section">
+        <button class="sb-link" type="button" onclick="window.location.href='student.html'">
+          <span class="sb-icon" aria-hidden="true">🎛️</span>
+          <span class="sb-text">Student Portal</span>
+        </button>
+
+        <button class="sb-link" type="button" onclick="window.location.href='studentprofile.html'">
+          <span class="sb-icon" aria-hidden="true">👤</span>
+          <span class="sb-text">Profile Student</span>
+        </button>
+
+        <button class="sb-link" type="button" onclick="window.location.href='student-updatedata.html'">
+          <span class="sb-icon" aria-hidden="true">✎</span>
+          <span class="sb-text">Update Data</span>
+        </button>
+
+        <button class="sb-link" type="button" onclick="window.location.href='student-verifyface.html'" style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06); transform:none;">
+          <span class="sb-icon" aria-hidden="true">🫱</span>
+          <span class="sb-text">Verify Face</span>
+        </button>
+
+        <button class="sb-link" type="button" onclick="window.location.href='student-uploadachievement.html'">
+          <span class="sb-icon" aria-hidden="true">🏆</span>
+          <span class="sb-text">Upload Achievement</span>
+        </button>
+
+        <button class="sb-link" type="button" onclick="window.location.href='student-queue-status.html'">
+          <span class="sb-icon" aria-hidden="true">#</span>
+          <span class="sb-text">Queue Number</span>
+        </button>
+      </div>
+
+      <div class="sb-footer">
+        <div class="sb-footer-label">Logged in as</div>
+        <div class="sb-footer-name" id="sb-footer-name">—</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="page" aria-label="Verify Face">
+        <h1 class="page-title">Face <span>Verification</span></h1>
+        <p class="page-sub">UI demo: guna kamera untuk ambil snapshot dan simpan status verifikasi di localStorage (tiada AI sebenar).</p>
+
+        <div class="grid">
+          <div class="card">
+            <div style="font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.2rem; margin-bottom:10px;">Camera</div>
+            <div class="camera-shell">
+              <video id="video" playsinline></video>
+            </div>
+
+            <div class="status-row">
+              <div class="pill" id="statusPill">Not Checked</div>
+              <div class="help" style="margin:0; text-align:right;">Status: <b id="statusText">—</b></div>
+            </div>
+
+            <button class="primary" type="button" id="btnCapture" onclick="captureSnapshot()">Capture & Submit</button>
+            <button class="ghost" type="button" onclick="restartCamera()">Restart Camera</button>
+
+            <div class="help">Tip: pastikan pencahayaan terang, muka menghadap kamera, dan tiada filter/halangan.</div>
+          </div>
+
+          <div class="card">
+            <div style="font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.2rem; margin-bottom:10px;">How it works</div>
+            <div class="list">
+              <div class="li">1) Klik <b>Capture & Submit</b></div>
+              <div class="li">2) Snapshot akan disimpan (base64) + status jadi <b>Pending</b></div>
+              <div class="li">3) Dalam production, snapshot dihantar ke backend AI untuk verifikasi sebenar.</div>
+            </div>
+
+            <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">
+              <div style="font-family:'DM Mono'; font-size:0.72rem; color:rgba(255,255,255,0.45); letter-spacing:1px; line-height:1.7;">
+                Terakhir update:
+                <b style="color:rgba(255,255,255,0.78)" id="lastUpdated">—</b>
+              </div>
+              <button class="ghost" type="button" onclick="clearVerification()">Clear Verification</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <footer>
+        <div class="footer-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"/>
+            <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+          </svg>
+          <span>SMARTCONVO</span>
+        </div>
+        <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+      </footer>
+
+      <div class="toast" id="toast"></div>
+    </main>
+  </div>
+
+  <script>
+    const VERIFICATION_KEY = 'student_face_verification_v1';
+    let stream = null;
+
+    const userName = localStorage.getItem('userName') || 'Student';
+    const navUser = document.getElementById('nav-user');
+    if (navUser) navUser.textContent = userName;
+
+    (function fillFooter(){
+      try{
+        const storedUserName = localStorage.getItem('userName');
+        const raw = localStorage.getItem('smartconvo_user');
+        let smartconvoName = null;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          smartconvoName = parsed?.name || parsed?.email || null;
+        }
+        const finalName = storedUserName || smartconvoName || 'Student';
+        const el = document.getElementById('sb-footer-name');
+        if (el) el.textContent = finalName;
+      } catch(e) {}
+    })();
+
+    function logout(){ localStorage.clear(); window.location.href = 'index.html'; }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function setStatusUI(status){
+      const pill = document.getElementById('statusPill');
+      const text = document.getElementById('statusText');
+      if (!pill || !text) return;
+
+      if (status === 'approved') {
+        pill.style.borderColor = 'rgba(0,229,180,0.3)';
+        pill.style.background = 'rgba(0,229,180,0.10)';
+        pill.style.color = 'var(--accent)';
+        pill.style.setProperty('--accent','rgb(0,229,180)');
+        pill.textContent = 'Approved';
+        text.textContent = 'Approved';
+      } else if (status === 'review') {
+        pill.style.borderColor = 'rgba(43,43,255,0.45)';
+        pill.style.background = 'rgba(43,43,255,0.18)';
+        pill.style.color = '#7b8fff';
+        pill.textContent = 'Pending (Review)';
+        text.textContent = 'Pending';
+      } else if (status === 'pending') {
+        pill.style.borderColor = 'rgba(240,192,64,0.35)';
+        pill.style.background = 'rgba(240,192,64,0.12)';
+        pill.style.color = 'var(--gold)';
+        pill.textContent = 'Pending';
+        text.textContent = 'Pending';
+      } else {
+        pill.style.borderColor = 'rgba(255,255,255,0.10)';
+        pill.style.background = 'rgba(255,255,255,0.03)';
+        pill.style.color = 'rgba(255,255,255,0.75)';
+        pill.textContent = 'Not Checked';
+        text.textContent = 'Not Checked';
+      }
+    }
+
+    function loadVerification(){
+      try{
+        const raw = localStorage.getItem(VERIFICATION_KEY);
+        if (!raw) {
+          setStatusUI('none');
+          document.getElementById('lastUpdated').textContent = '—';
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        const status = parsed?.status || 'none';
+        setStatusUI(status);
+        const t = parsed?.updatedAt ? new Date(parsed.updatedAt).toLocaleString() : '—';
+        document.getElementById('lastUpdated').textContent = t;
+      } catch(e){
+        setStatusUI('none');
+        document.getElementById('lastUpdated').textContent = '—';
+      }
+    }
+
+    async function restartCamera(){
+      stopCamera();
+      await startCamera();
+      showToast('Camera restarted');
+    }
+
+    function stopCamera(){
+      try{
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+        }
+      } catch(e) {}
+      stream = null;
+    }
+
+    async function startCamera(){
+      const video = document.getElementById('video');
+      if (!video) return;
+
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = stream;
+        await video.play();
+      } catch(e){
+        showToast('Tidak dapat akses kamera. Sila enable permissions.');
+      }
+    }
+
+    function captureSnapshot(){
+      const video = document.getElementById('video');
+      if (!video || video.readyState < 2) {
+        showToast('Kamera belum ready. Cuba lagi.');
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+      const now = Date.now();
+      const payload = {
+        status: 'pending',
+        snapshot: dataUrl,
+        updatedAt: now
+      };
+
+      localStorage.setItem(VERIFICATION_KEY, JSON.stringify(payload));
+      setStatusUI('pending');
+      document.getElementById('lastUpdated').textContent = new Date(now).toLocaleString();
+
+      showToast('Snapshot submitted (Pending)!');
+
+      // demo: auto-progress to review after 2s
+      setTimeout(() => {
+        const p = { ...payload, status: 'review', updatedAt: Date.now() };
+        localStorage.setItem(VERIFICATION_KEY, JSON.stringify(p));
+        setStatusUI('review');
+        document.getElementById('lastUpdated').textContent = new Date(p.updatedAt).toLocaleString();
+      }, 2000);
+    }
+
+    function clearVerification(){
+      if(!confirm('Clear face verification demo data?')) return;
+      localStorage.removeItem(VERIFICATION_KEY);
+      setStatusUI('none');
+      document.getElementById('lastUpdated').textContent = '—';
+      showToast('Verification cleared.');
+    }
+
+    // init
+    loadVerification();
+    startCamera();
+
+    window.addEventListener('beforeunload', () => {
+      stopCamera();
+    });
+  </script>
+</body>
+</html>
+

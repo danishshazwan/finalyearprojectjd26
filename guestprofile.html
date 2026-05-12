@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Guest Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.55);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-y:auto; }
+
+.layout { display: flex; min-height: calc(100vh - 64px); }
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,0.01);
+  padding: 28px 18px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+.main { flex: 1; min-height: 100vh; overflow-y: auto; }
+
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0.025; pointer-events:none; z-index:9999;
+}
+
+/* NAV */
+nav {
+  position: sticky; top:0; z-index:100;
+  background: rgba(6,8,11,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+  animation: fadeDown 0.6s ease both;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; }
+.nav-brand svg { width:24px; height:24px; color: var(--accent); }
+.nav-brand span { font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-user { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: var(--dim); }
+.nav-logout { background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+.nav-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+.nav-profile {
+  display:flex; align-items:center; gap:10px;
+  background: rgba(0,229,180,0.10);
+  border: 1px solid rgba(0,229,180,0.35);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 6px 14px;
+  text-decoration:none;
+  transition: all 0.3s;
+  font-family:'DM Mono';
+  font-size:0.7rem;
+  letter-spacing:2px;
+}
+.nav-profile:hover { background: rgba(0,229,180,0.18); transform: translateY(-1px); }
+.nav-profile-dot { width:7px; height:7px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+
+/* Sidebar */
+.sb-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding: 0 8px; }
+.sb-brand-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+.sb-brand-title { font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color: rgba(255,255,255,0.65); }
+
+.sb-section { display:flex; flex-direction: column; gap:10px; padding: 0 8px; }
+.sb-link {
+  width:100%;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--fg);
+  border-radius: 12px;
+  padding: 12px 12px;
+  cursor: pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition: all 0.3s;
+}
+.sb-link:hover { border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06); transform: translateX(4px); }
+.sb-icon { width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background: rgba(0,229,180,0.08); color: var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+.sb-text { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color: rgba(255,255,255,0.72); }
+
+.sb-footer { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; padding-left: 8px; padding-right: 8px; }
+.sb-footer-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.sb-footer-name { font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color: var(--accent); }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; position: relative; top: auto; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .main { min-height: auto; }
+}
+
+/* HERO/HEADER AREA */
+.page-header {
+  padding: 100px 32px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+.page-header-eyebrow { font-family:'DM Mono'; font-size:0.72rem; letter-spacing:4px; color:var(--accent); margin-bottom:20px; animation: fadeUp 0.6s 0.1s ease both; }
+.page-header-title { font-family:'Bebas Neue'; font-size:clamp(3.1rem,7vw,5.2rem); letter-spacing:4px; line-height:0.95; margin-bottom:18px; animation: fadeUp 0.6s 0.2s ease both; }
+.page-header-title span { color: var(--accent); }
+.page-header-sub { font-size:1rem; color:var(--dim); max-width:640px; margin:0 auto; line-height:1.8; animation: fadeUp 0.6s 0.3s ease both; }
+
+/* PROFILE CARD */
+.section { padding: 0 32px 80px; max-width:1200px; margin:0 auto; }
+.profile-grid { display:grid; grid-template-columns: 1fr; gap:16px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  overflow:hidden;
+  animation: fadeUp 0.5s ease both;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0;
+}
+
+.row { display:flex; gap:16px; flex-wrap:wrap; }
+
+.kv {
+  flex: 1 1 260px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.kv-label { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.kv-value { font-family:'Syne'; font-weight:700; font-size:1rem; letter-spacing:0.2px; color: var(--fg); word-break:break-word; }
+
+.badge {
+  display:inline-flex; align-items:center; gap:10px;
+  background: rgba(0,229,180,0.08);
+  border: 1px solid rgba(0,229,180,0.2);
+  border-radius: 100px;
+  padding: 8px 14px;
+  font-family:'DM Mono';
+  font-size:0.68rem;
+  letter-spacing:2px;
+  color: var(--accent);
+}
+
+/* Footer */
+footer { border-top:1px solid var(--line); padding:40px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; max-width:1200px; margin:0 auto; }
+.footer-brand { display:flex; align-items:center; gap:10px; }
+.footer-brand svg { width:20px; height:20px; color:var(--accent); }
+.footer-brand span { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+.footer-copy { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+/* Animations */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+
+  <div class="nav-right">
+    <a class="nav-profile" href="guest.html" aria-label="Go back to guest">
+      <span class="nav-profile-dot" aria-hidden="true"></span>
+      <span id="nav-profile-text">PROFILE</span>
+    </a>
+    <span class="nav-user" id="nav-user">—</span>
+    <button class="nav-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Sidebar Menu">
+    <div class="sb-brand">
+      <div class="sb-brand-dot" aria-hidden="true"></div>
+      <div class="sb-brand-title">Menu</div>
+    </div>
+
+    <div class="sb-section">
+      <button class="sb-link" type="button" onclick="window.location.href='guest.html'">
+        <span class="sb-icon" aria-hidden="true">⌂</span>
+        <span class="sb-text">Guest Portal</span>
+      </button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guest-graduate-status.html'">
+  <span class="sb-icon" aria-hidden="true">✓</span>
+  <span class="sb-text">Graduate Status</span>
+</button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guestvote.html'">
+  <span class="sb-icon" aria-hidden="true">🗳️</span>
+  <span class="sb-text">Graduate Voting</span>
+</button>
+
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-hall-live.html'">
+        <span class="sb-icon" aria-hidden="true">◷</span>
+        <span class="sb-text">Hall Live</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-award-gallery.html'">
+        <span class="sb-icon" aria-hidden="true">★</span>
+        <span class="sb-text">Award Gallery</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-live-announcement.html'">
+        <span class="sb-icon" aria-hidden="true">!</span>
+        <span class="sb-text">Announcements</span>
+      </button>
+
+            <button class="sb-link" type="button" onclick="window.location.href='guestprofile.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+        <span class="sb-icon" aria-hidden="true">☺</span>
+        <span class="sb-text">My Profile</span>
+      </button> 
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-label">Logged in as</div>
+      <div class="sb-footer-name" id="sb-footer-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="page-header">
+      <div class="page-header-eyebrow">Guest Access</div>
+      <h1 class="page-header-title">My <span>Profile</span></h1>
+      <p class="page-header-sub">View your guest information. Semua info di sini berdasarkan data yang disimpan semasa log in.</p>
+      <div style="margin-top:18px" class="badge"><span aria-hidden="true">◆</span><span id="profile-badge">GUEST</span></div>
+    </header>
+
+    <section class="section">
+      <div class="profile-grid">
+        <div class="card">
+          <div class="row">
+            <div class="kv">
+              <div class="kv-label">Name</div>
+              <div class="kv-value" id="kv-name">—</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Email</div>
+              <div class="kv-value" id="kv-email">—</div>
+            </div>
+            <div class="kv">
+              <div class="kv-label">Login Role</div>
+              <div class="kv-value" id="kv-role">guest</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:16px">
+            <div class="kv" style="flex: 1 1 420px;">
+              <div class="kv-label">Last Login Time</div>
+              <div class="kv-value" id="kv-time">—</div>
+            </div>
+            <div class="kv" style="flex: 1 1 260px;">
+              <div class="kv-label">Actions</div>
+              <div class="kv-value">
+                <button type="button" class="nav-logout" onclick="window.location.href='guest.html'" style="border-radius:10px; padding:10px 16px; font-size:0.62rem;">
+                  Back to Portal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+        </svg>
+        <span>SMARTCONVO</span>
+      </div>
+      <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+function readSmartconvoUser() {
+  try {
+    const raw = localStorage.getItem('smartconvo_user');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Prefer stored userName, else fallback to smartconvo_user
+const storedUserName = localStorage.getItem('userName');
+const smartconvoUser = readSmartconvoUser();
+const userName = storedUserName || smartconvoUser?.name || smartconvoUser?.email || 'Guest';
+
+const userEmail = smartconvoUser?.email || '—';
+const loginTime = smartconvoUser?.loginTime || smartconvoUser?.lastLogin || null;
+
+document.getElementById('nav-user').textContent = userName;
+document.getElementById('sb-footer-name').textContent = userName;
+document.getElementById('kv-name').textContent = userName;
+document.getElementById('kv-email').textContent = userEmail;
+document.getElementById('kv-role').textContent = (smartconvoUser?.role || 'guest');
+
+let timeText = '—';
+if (loginTime) {
+  try {
+    timeText = new Date(loginTime).toLocaleString();
+  } catch (e) {
+    timeText = String(loginTime);
+  }
+}
+document.getElementById('kv-time').textContent = timeText;
+
+document.getElementById('profile-badge').textContent = (smartconvoUser?.role || 'GUEST').toUpperCase();
+</script>
+</body>
+</html>
+

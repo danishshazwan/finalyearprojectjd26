@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMARTCONVO — Guest Voting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #00e5b4;
+      --accent2: #2B2BFF;
+      --bg: #06080b;
+      --fg: #e8eaf0;
+      --dim: rgba(255,255,255,0.55);
+      --line: rgba(255,255,255,0.08);
+      --card: rgba(255,255,255,0.03);
+      --danger: rgba(255,120,120,0.95);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+
+    body::before {
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:0.025;
+      pointer-events:none;
+      z-index:9999;
+    }
+
+    .layout { display:flex; min-height: calc(100vh - 64px); }
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--line);
+      background: rgba(255,255,255,0.01);
+      padding: 28px 18px;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+    .main { flex: 1; min-height: 100vh; overflow-y: auto; }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top:0;
+      z-index:100;
+      background: rgba(6,8,11,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+      padding: 0 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      height:64px;
+      animation: fadeDown 0.6s ease both;
+    }
+    .nav-brand { display:flex; align-items:center; gap:10px; }
+    .nav-brand svg { width:24px; height:24px; color: var(--accent); }
+    .nav-brand span { font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+    .nav-right { display:flex; align-items:center; gap:16px; }
+    .nav-user { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: var(--dim); }
+    .nav-logout {
+      background:none;
+      border:1px solid var(--line);
+      border-radius:6px;
+      padding:6px 14px;
+      color:rgba(255,255,255,0.4);
+      font-family:'DM Mono';
+      font-size:0.68rem;
+      letter-spacing:2px;
+      cursor:pointer;
+      transition:all 0.3s;
+    }
+    .nav-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+    .nav-profile {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(0,229,180,0.10);
+      border: 1px solid rgba(0,229,180,0.35);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 6px 14px;
+      text-decoration:none;
+      transition: all 0.3s;
+      font-family:'DM Mono';
+      font-size:0.7rem;
+      letter-spacing:2px;
+    }
+    .nav-profile:hover { background: rgba(0,229,180,0.18); transform: translateY(-1px); }
+    .nav-profile-dot { width:7px; height:7px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+
+    /* Sidebar */
+    .sb-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding: 0 8px; }
+    .sb-brand-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+    .sb-brand-title { font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color: rgba(255,255,255,0.65); }
+
+    .sb-section { display:flex; flex-direction: column; gap:10px; padding: 0 8px; }
+    .sb-link {
+      width:100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: var(--fg);
+      border-radius: 12px;
+      padding: 12px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      transition: all 0.3s;
+    }
+    .sb-link:hover { border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06); transform: translateX(4px); }
+    .sb-icon { width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background: rgba(0,229,180,0.08); color: var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+    .sb-text { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color: rgba(255,255,255,0.72); }
+
+    .sb-footer { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; padding-left: 8px; padding-right: 8px; }
+    .sb-footer-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+    .sb-footer-name { font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color: var(--accent); }
+
+    @media (max-width: 900px) {
+
+
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; position: relative; top: auto; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+      .main { min-height: auto; }
+    }
+
+    /* Header */
+    .page-header {
+      padding: 100px 32px 26px;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .page-header-eyebrow { font-family:'DM Mono'; font-size:0.72rem; letter-spacing:4px; color:var(--accent); margin-bottom:20px; animation: fadeUp 0.6s 0.1s ease both; }
+    .page-header-title { font-family:'Bebas Neue'; font-size:clamp(3.1rem,7vw,5.2rem); letter-spacing:4px; line-height:0.95; margin-bottom:18px; animation: fadeUp 0.6s 0.2s ease both; }
+    .page-header-title span { color: var(--accent); }
+    .page-header-sub { font-size:1rem; color:var(--dim); max-width:720px; margin:0 auto; line-height:1.8; animation: fadeUp 0.6s 0.3s ease both; }
+
+    .section { padding: 0 32px 80px; max-width: 1200px; margin: 0 auto; }
+
+    /* Cards */
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .card-body { padding: 20px; }
+
+    .row {
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .kpi {
+      flex: 1 1 260px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .kpi-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+    .kpi-value { font-family:'Syne'; font-weight:700; font-size:1.15rem; color: var(--fg); }
+    .kpi-hint { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:1px; color: rgba(255,255,255,0.35); margin-top:6px; line-height:1.6; }
+
+    /* Voting */
+    .vote-controls {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+      align-items:center;
+    }
+
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(0,229,180,0.08);
+      border: 1px solid rgba(0,229,180,0.2);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-family:'DM Mono';
+      font-size:0.68rem;
+      letter-spacing:2px;
+      color: var(--accent);
+    }
+
+    .segmented {
+      display:flex;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      overflow:hidden;
+      background: rgba(255,255,255,0.02);
+    }
+    .seg-btn {
+      padding: 10px 14px;
+      cursor:pointer;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.65);
+      font-family:'DM Mono';
+      font-size:0.65rem;
+      letter-spacing:2px;
+      transition: all .25s;
+    }
+    .seg-btn.active { background: rgba(0,229,180,0.14); color: var(--accent); }
+
+    .candidate-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .candidate {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      padding: 16px;
+      display:flex;
+      gap: 14px;
+      align-items:flex-start;
+      transition: all .25s;
+      cursor: pointer;
+      position: relative;
+      overflow:hidden;
+    }
+    .candidate:hover { transform: translateY(-2px); border-color: rgba(0,229,180,0.28); background: rgba(0,229,180,0.05); }
+
+    .candidate.selected { border-color: rgba(0,229,180,0.55); box-shadow: 0 12px 28px rgba(0,229,180,0.10); }
+
+    .cand-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0,229,180,0.22), rgba(43,43,255,0.18));
+      border: 1px solid rgba(0,229,180,0.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Bebas Neue';
+      font-size:1.2rem;
+      letter-spacing:1px;
+      color: var(--accent);
+      flex-shrink:0;
+    }
+
+    .cand-info { flex: 1; min-width:0; }
+    .cand-name { font-family:'Syne'; font-weight:700; font-size:0.95rem; margin-bottom: 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cand-sub { font-family:'DM Mono'; font-size:0.68rem; letter-spacing:1px; color: rgba(255,255,255,0.55); line-height:1.6; }
+
+    .tick {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: rgba(255,255,255,0.3);
+      flex-shrink:0;
+      margin-top: 3px;
+    }
+    .candidate.selected .tick { border-color: rgba(0,229,180,0.55); color: var(--accent); }
+
+    .vote-actions {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top: 16px;
+    }
+
+    .btn {
+      border:none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family:'Bebas Neue';
+      font-size:1.1rem;
+      letter-spacing:3px;
+      cursor:pointer;
+      transition: all .25s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #06080b;
+    }
+    .btn-primary:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 10px 26px rgba(0,229,180,0.25); }
+    .btn-primary:disabled { opacity: .5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .btn-ghost {
+      background: transparent;
+      color: rgba(255,255,255,0.65);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-family:'DM Mono';
+      font-size:0.72rem;
+      letter-spacing:2px;
+      padding: 11px 14px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .msg {
+      font-family:'DM Mono';
+      font-size:0.7rem;
+      letter-spacing:1px;
+      color: rgba(255,255,255,0.45);
+      line-height:1.7;
+    }
+
+    .error { color: var(--danger); }
+
+    /* Result */
+    .result-list { display:flex; flex-direction:column; gap:10px; margin-top: 12px; }
+    .result-item {
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      padding: 12px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+    }
+    .bar {
+      flex: 1;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .bar > span {
+      display:block;
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(0,229,180,0.85), rgba(43,43,255,0.55));
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+    .result-meta { width: 88px; text-align:right; font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: rgba(255,255,255,0.55); }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 40px 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:16px;
+      max-width:1200px;
+      margin: 0 auto;
+    }
+    .footer-brand { display:flex; align-items:center; gap:10px; }
+    .footer-brand svg { width:20px; height:20px; color:var(--accent); }
+    .footer-brand span { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+    .footer-copy { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+      </svg>
+      <span>SMARTCONVO</span>
+    </div>
+
+    <div class="nav-right">
+      <a class="nav-profile" href="guestprofile.html" aria-label="Go to profile">
+        <span class="nav-profile-dot" aria-hidden="true"></span>
+        <span id="nav-profile-text">PROFILE</span>
+      </a>
+      <span class="nav-user" id="nav-user">—</span>
+      <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Sidebar Menu">
+      <div class="sb-brand">
+        <div class="sb-brand-dot" aria-hidden="true"></div>
+        <div class="sb-brand-title">Menu</div>
+      </div>
+
+    <div class="sb-section">
+      <button class="sb-link" type="button" onclick="window.location.href='guest.html'">
+        <span class="sb-icon" aria-hidden="true">⌂</span>
+        <span class="sb-text">Guest Portal</span>
+      </button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guest-graduate-status.html'">
+  <span class="sb-icon" aria-hidden="true">✓</span>
+  <span class="sb-text">Graduate Status</span>
+</button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guestvote.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+  <span class="sb-icon" aria-hidden="true">🗳️</span>
+  <span class="sb-text">Graduate Voting</span>
+</button>
+
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-hall-live.html'">
+        <span class="sb-icon" aria-hidden="true">◷</span>
+        <span class="sb-text">Hall Live</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-award-gallery.html'">
+        <span class="sb-icon" aria-hidden="true">★</span>
+        <span class="sb-text">Award Gallery</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-live-announcement.html'">
+        <span class="sb-icon" aria-hidden="true">!</span>
+        <span class="sb-text">Announcements</span>
+      </button>
+
+            <button class="sb-link" type="button" onclick="window.location.href='guestprofile.html'">
+        <span class="sb-icon" aria-hidden="true">☺</span>
+        <span class="sb-text">My Profile</span>
+      </button> 
+      
+    <div class="sb-footer">
+      <div class="sb-footer-label">Logged in as</div>
+      <div class="sb-footer-name" id="sb-footer-name">—</div>
+    </div>
+  </aside>
+
+    <main class="main">
+      <header class="page-header">
+        <div class="page-header-eyebrow">Guest Access</div>
+        <h1 class="page-header-title">Cast <span>Your Vote</span></h1>
+        <p class="page-header-sub">Pilih calon untuk kategori <b>People’s Choice</b>. Voting hanya boleh dibuat sekali per device (demo menggunakan localStorage).</p>
+      </header>
+
+      <section class="section">
+        <div class="grid">
+          <div class="card">
+            <div class="card-body">
+              <div class="row">
+                <div class="kpi">
+                  <div class="kpi-label">Status Voting</div>
+                  <div class="kpi-value" id="kpi-status">—</div>
+                  <div class="kpi-hint" id="kpi-hint">—</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Your Vote</div>
+                  <div class="kpi-value" id="kpi-your-vote">—</div>
+                  <div class="kpi-hint" id="kpi-your-vote-hint">—</div>
+                </div>
+              </div>
+
+              <div class="vote-controls">
+                <span class="pill">People’s Choice</span>
+
+                <div class="segmented" role="tablist" aria-label="Semester">
+                  <button class="seg-btn active" type="button" data-half="jan-jun">Jan–Jun</button>
+                  <button class="seg-btn" type="button" data-half="jul-dec">Jul–Dec</button>
+                </div>
+              </div>
+
+              <div class="candidate-grid" id="candidate-grid"></div>
+
+              <div class="vote-actions">
+                <div class="msg" id="vote-msg">Select a candidate, then submit your vote.</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                  <button class="btn btn-ghost" type="button" onclick="resetSelection()">RESET</button>
+                  <button class="btn btn-primary" type="button" id="submitVoteBtn" onclick="submitVote()">SUBMIT VOTE</button>
+                </div>
+              </div>
+
+              <div id="vote-error" class="msg error" style="display:none; margin-top:10px;">—</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:0;">
+            <div class="card-body">
+              <div class="vote-controls" style="margin-bottom:6px;">
+                <span class="pill" style="background: rgba(43,43,255,0.08); border-color: rgba(43,43,255,0.25); color: var(--accent2);">Live Results</span>
+                <span class="msg" id="results-note">Computed locally from stored votes (demo).</span>
+              </div>
+              <div class="result-list" id="result-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+          </svg>
+          <span>SMARTCONVO</span>
+        </div>
+        <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+    function readSmartconvoUser() {
+      try {
+        const raw = localStorage.getItem('smartconvo_user');
+        if (!raw) return null;
+        return JSON.parse(raw) || null;
+      } catch { return null; }
+    }
+
+    const storedUserName = localStorage.getItem('userName');
+    const smartconvoUser = readSmartconvoUser();
+    const userName = storedUserName || smartconvoUser?.name || smartconvoUser?.email || 'Guest';
+
+    document.getElementById('nav-user').textContent = userName;
+    document.getElementById('sb-footer-name').textContent = userName;
+
+    // ---- Demo voting model ----
+    // Use smartconvoStorage if available (from assets/js/smartconvo-storage.js).
+    // Fallback to localStorage simple keys.
+
+    const CANDIDATES = [
+      { id: '2402085', name: 'Nur Ain Solehah Binti Muhd Fauzi', half: 'jan-jun', tagline: "People’s Choice • Featured" },
+      { id: '2402086', name: 'Nur Fadhilatul Akma Binti Roslan', half: 'jan-jun', tagline: "People’s Choice • Featured" },
+      { id: '2402087', name: 'Nur Fatin Nadiah Binti Mohd Khir', half: 'jul-dec', tagline: "People’s Choice • Featured" },
+      { id: '2402088', name: 'Nursyazwanie Binti Jaimi', half: 'jul-dec', tagline: "People’s Choice • Featured" }
+    ];
+
+    const STORAGE_KEY = 'guest_vote_demo_v1';
+
+    function safeGet(jsonKey, fallback) {
+      try {
+        const raw = localStorage.getItem(jsonKey);
+        if (!raw) return fallback;
+        return JSON.parse(raw) || fallback;
+      } catch { return fallback; }
+    }
+
+    function safeSet(jsonKey, value) {
+      localStorage.setItem(jsonKey, JSON.stringify(value));
+    }
+
+    function getVoteStore() {
+      return safeGet(STORAGE_KEY, {
+        // { [half]: { candidates: {id: votes}, myVote: candidateId|null } }
+        halfState: {
+          'jan-jun': { candidates: {}, myVote: null },
+          'jul-dec': { candidates: {}, myVote: null }
+        },
+        locked: false,
+        updatedAt: Date.now()
+      });
+    }
+
+    function setVoteStore(next) {
+      next.updatedAt = Date.now();
+      safeSet(STORAGE_KEY, next);
+    }
+
+    let selectedHalf = 'jan-jun';
+    let selectedCandidateId = null;
+
+    const halfButtons = document.querySelectorAll('.seg-btn');
+    halfButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        halfButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedHalf = btn.dataset.half;
+        selectedCandidateId = null;
+        renderCandidates();
+        renderResults();
+        updateStatusUI();
+      });
+    });
+
+    function initials(name) {
+      return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    }
+
+    function getMyVoteForHalf(store, half) {
+      return store?.halfState?.[half]?.myVote ?? null;
+    }
+
+    function getVotesForHalf(store, half) {
+      return store?.halfState?.[half]?.candidates ?? {};
+    }
+
+    function updateStatusUI() {
+      const store = getVoteStore();
+      const locked = !!store.locked;
+
+      const statusEl = document.getElementById('kpi-status');
+      const hintEl = document.getElementById('kpi-hint');
+      const yourVoteEl = document.getElementById('kpi-your-vote');
+      const yourVoteHintEl = document.getElementById('kpi-your-vote-hint');
+      const submitBtn = document.getElementById('submitVoteBtn');
+
+      const myVote = getMyVoteForHalf(store, selectedHalf);
+
+      if (locked) {
+        statusEl.textContent = 'LOCKED';
+        hintEl.textContent = 'Voting period has ended.';
+        submitBtn.disabled = true;
+      } else {
+        statusEl.textContent = 'OPEN';
+        hintEl.textContent = 'You can vote for People’s Choice.';
+        submitBtn.disabled = !selectedCandidateId; // enabled only after selecting
+      }
+
+      if (myVote) {
+        const cand = CANDIDATES.find(c => c.id === myVote);
+        yourVoteEl.textContent = cand ? 'Voted' : 'Voted';
+        yourVoteHintEl.textContent = cand ? cand.name : myVote;
+      } else {
+        yourVoteEl.textContent = 'Not Yet';
+        yourVoteHintEl.textContent = 'Submit to cast your vote.';
+      }
+
+      submitBtn.disabled = locked || !!myVote || !selectedCandidateId;
+
+      const voteMsg = document.getElementById('vote-msg');
+      if (locked) voteMsg.textContent = 'Voting is locked. Thanks for participating.';
+      else if (myVote) voteMsg.textContent = 'You already voted for this semester.';
+      else voteMsg.textContent = selectedCandidateId ? 'Ready. Click SUBMIT VOTE.' : 'Select a candidate, then submit.';
+    }
+
+    function renderCandidates() {
+      const grid = document.getElementById('candidate-grid');
+      const store = getVoteStore();
+      const myVote = getMyVoteForHalf(store, selectedHalf);
+
+      const list = CANDIDATES.filter(c => c.half === selectedHalf);
+      grid.innerHTML = '';
+
+      list.forEach((c, idx) => {
+        const isSelected = selectedCandidateId === c.id;
+        const isVoted = myVote === c.id;
+
+        grid.innerHTML += `
+          <div class="candidate ${isSelected ? 'selected' : ''}" role="button" tabindex="0" aria-pressed="${isSelected}" data-id="${c.id}" onclick="selectCandidate('${c.id}')" onkeydown="if(event.key==='Enter'){selectCandidate('${c.id}')}" >
+            <div class="cand-avatar">${initials(c.name)}</div>
+            <div class="cand-info">
+              <div class="cand-name">${c.name}</div>
+              <div class="cand-sub">${c.tagline}</div>
+              ${isVoted ? `<div class="cand-sub" style="color: rgba(0,229,180,0.95); margin-top:6px;">Your vote</div>` : ''}
+            </div>
+            <div class="tick" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+          </div>
+        `;
+      });
+
+      // Reset error display after rerender
+      const errEl = document.getElementById('vote-error');
+      errEl.style.display = 'none';
+      errEl.textContent = '—';
+
+      // Enable/disable submit button properly
+      updateStatusUI();
+    }
+
+    function renderResults() {
+      const listEl = document.getElementById('result-list');
+      const store = getVoteStore();
+      const votesMap = getVotesForHalf(store, selectedHalf);
+      const candidates = CANDIDATES.filter(c => c.half === selectedHalf);
+
+      const rows = candidates.map(c => {
+        const votes = Number(votesMap[c.id] || 0);
+        return { ...c, votes };
+      }).sort((a,b) => b.votes - a.votes);
+
+      const total = rows.reduce((s, r) => s + r.votes, 0);
+      const maxVotes = Math.max(1, ...rows.map(r => r.votes));
+
+      listEl.innerHTML = '';
+      rows.forEach((r) => {
+        const percent = total === 0 ? 0 : Math.round((r.votes / total) * 100);
+        const width = Math.round((r.votes / maxVotes) * 100);
+
+        listEl.innerHTML += `
+          <div class="result-item">
+            <div class="cand-info" style="min-width:0;">
+              <div class="cand-name" style="font-size:0.86rem;">${r.name}</div>
+              <div class="cand-sub">${percent}% of votes</div>
+            </div>
+            <div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div>
+            <div class="result-meta">${r.votes} vote${r.votes===1?'':'s'}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('results-note').textContent = store.locked ? 'Voting is locked. Results are final.' : 'Results update after each submission (demo).';
+    }
+
+    window.selectCandidate = function(id) {
+      selectedCandidateId = id;
+      // remove error
+      const errEl = document.getElementById('vote-error');
+      errEl.style.display = 'none';
+
+      const myVote = getMyVoteForHalf(getVoteStore(), selectedHalf);
+      const locked = !!getVoteStore().locked;
+
+      if (locked) return;
+      if (myVote) return;
+
+      // Rerender so selected class shows
+      renderCandidates();
+
+      // Keep selection UI without losing results
+      renderResults();
+
+      // Update submit enabled state
+      updateStatusUI();
+    };
+
+    window.resetSelection = function() {
+      selectedCandidateId = null;
+      renderCandidates();
+      renderResults();
+    };
+
+    window.submitVote = function() {
+      const store = getVoteStore();
+      const locked = !!store.locked;
+      const myVote = getMyVoteForHalf(store, selectedHalf);
+
+      const errEl = document.getElementById('vote-error');
+      const submitBtn = document.getElementById('submitVoteBtn');
+
+      if (locked) {
+        errEl.textContent = 'Voting is locked.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (myVote) {
+        errEl.textContent = 'You already voted for this semester.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (!selectedCandidateId) {
+        errEl.textContent = 'Please select a candidate first.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      errEl.style.display = 'none';
+
+      const next = structuredClone(store);
+      if (!next.halfState[selectedHalf]) next.halfState[selectedHalf] = { candidates: {}, myVote: null };
+      if (!next.halfState[selectedHalf].candidates) next.halfState[selectedHalf].candidates = {};
+
+      next.halfState[selectedHalf].candidates[selectedCandidateId] = (Number(next.halfState[selectedHalf].candidates[selectedCandidateId] || 0) + 1);
+      next.halfState[selectedHalf].myVote = selectedCandidateId;
+      next.locked = false;
+
+      setVoteStore(next);
+
+      // Clear selection to avoid confusion; keep my vote displayed
+      selectedCandidateId = null;
+
+      // Render
+      renderCandidates();
+      renderResults();
+      updateStatusUI();
+
+      const voteMsg = document.getElementById('vote-msg');
+      voteMsg.textContent = 'Vote submitted successfully. Thanks!';
+    };
+
+    // Initial render
+    renderCandidates();
+    renderResults();
+    updateStatusUI();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,2492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — AI Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SMARTCONVO AI COMMAND CENTER — PREMIUM REDESIGN
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:    #00e5b4;
+  --accent2:   #00b8ff;
+  --red:       #ff4d6d;
+  --gold:      #f0c040;
+  --blue:      #4d7fff;
+  --purple:    #a855f7;
+  --bg:        #06080d;
+  --bg2:       #0a0d14;
+  --bg3:       #0e1219;
+  --fg:        #e8eaf0;
+  --dim:       rgba(255,255,255,0.45);
+  --line:      rgba(255,255,255,0.07);
+  --line2:     rgba(0,229,180,0.12);
+  --card:      rgba(255,255,255,0.025);
+  --card2:     rgba(0,229,180,0.04);
+  --glass:     rgba(14,18,25,0.85);
+  --sidebar-w: 260px;
+  --topbar-h:  64px;
+  --radius:    14px;
+  --radius-sm: 8px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* ——— NOISE OVERLAY ——— */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.022; pointer-events: none; z-index: 9999;
+}
+
+/* ——— AMBIENT GLOW BACKGROUND ——— */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 900px 600px at 15% 0%, rgba(0,229,180,0.055) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 85% 100%, rgba(0,184,255,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 50% 50%, rgba(77,127,255,0.025) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: rgba(8,11,18,0.96);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  z-index: 100;
+  backdrop-filter: blur(24px);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute; top: 0; right: -1px; width: 1px; height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,229,180,0.25) 40%, rgba(0,229,180,0.1) 70%, transparent 100%);
+}
+
+.sb-brand {
+  padding: 28px 22px 22px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.sb-logo-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sb-logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, rgba(0,229,180,0.15), rgba(0,184,255,0.1));
+  border: 1px solid rgba(0,229,180,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0,229,180,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.sb-logo-icon svg { width: 18px; height: 18px; color: var(--accent); }
+
+.sb-name {
+  font-family: 'Bebas Neue';
+  font-size: 1.25rem;
+  letter-spacing: 6px;
+  line-height: 1;
+}
+
+.sb-tagline {
+  font-family: 'DM Mono';
+  font-size: 0.57rem;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 12px;
+}
+
+.sb-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.sb-badge {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  border-radius: 100px;
+  padding: 3px 9px;
+  display: inline-block;
+}
+.sb-badge.admin { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: var(--red); }
+.sb-badge.live  { background: rgba(0,229,180,0.1); border: 1px solid rgba(0,229,180,0.25); color: var(--accent);
+  animation: pulseBadge 2s infinite; }
+
+@keyframes pulseBadge {
+  0%,100% { box-shadow: none; }
+  50%      { box-shadow: 0 0 8px rgba(0,229,180,0.3); }
+}
+
+.sb-status-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0,229,180,0.02);
+}
+.sb-status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: blinkDot 1.5s infinite;
+}
+@keyframes blinkDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.sb-status-text {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+.sb-nav { flex: 1; padding: 12px 14px; overflow-y: auto; }
+.sb-nav::-webkit-scrollbar { width: 3px; }
+.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.sb-section-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.2);
+  padding: 16px 8px 6px;
+  text-transform: uppercase;
+}
+
+.sb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none; background: none;
+  color: rgba(255,255,255,0.38);
+  font-family: 'DM Mono';
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  width: 100%; text-align: left;
+  transition: all 0.22s;
+  margin-bottom: 2px;
+  position: relative;
+}
+.sb-item svg { width: 15px; height: 15px; stroke: currentColor; flex-shrink: 0; }
+.sb-item:hover { background: rgba(255,255,255,0.04); color: var(--fg); }
+.sb-item.active {
+  background: rgba(0,229,180,0.08);
+  color: var(--accent);
+  border-left: 2px solid var(--accent);
+}
+.sb-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px var(--accent);
+}
+.sb-item .badge-count {
+  margin-left: auto;
+  background: rgba(0,229,180,0.15);
+  border: 1px solid rgba(0,229,180,0.2);
+  border-radius: 100px;
+  padding: 1px 7px;
+  font-size: 0.58rem;
+  color: var(--accent);
+}
+.sb-item .badge-alert {
+  margin-left: auto;
+  background: rgba(255,77,109,0.15);
+  border: 1px solid rgba(255,77,109,0.25);
+  border-radius: 100px;
+  padding: 1px 7px;
+  font-size: 0.58rem;
+  color: var(--red);
+}
+
+.sb-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.sb-user-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.sb-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,229,180,0.2), rgba(77,127,255,0.2));
+  border: 1px solid rgba(0,229,180,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue';
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.sb-user-name {
+  font-family: 'Syne';
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+.sb-user-role {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+}
+
+.sb-logout {
+  width: 100%;
+  background: none;
+  border: 1px solid rgba(255,77,109,0.2);
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  color: rgba(255,77,109,0.6);
+  font-family: 'DM Mono';
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.sb-logout:hover { background: rgba(255,77,109,0.07); color: var(--red); border-color: var(--red); box-shadow: 0 0 12px rgba(255,77,109,0.15); }
+.sb-logout svg { width: 12px; height: 12px; stroke: currentColor; }
+
+.sb-toggle {
+  display: none;
+  position: fixed;
+  top: 18px; left: 16px;
+  width: 40px; height: 40px;
+  background: rgba(14,18,25,0.95);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  z-index: 200;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.sb-toggle span {
+  display: block; width: 18px; height: 1.5px;
+  background: var(--fg); border-radius: 2px;
+  transition: all 0.25s;
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+  background: rgba(6,8,13,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  animation: fadeDown 0.5s ease both;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+
+.topbar-title {
+  font-family: 'Bebas Neue';
+  font-size: 1.05rem;
+  letter-spacing: 4px;
+  color: var(--fg);
+}
+
+.topbar-breadcrumb {
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.2);
+}
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.topbar-time {
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.25);
+  min-width: 90px;
+}
+
+.topbar-date {
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.18);
+}
+
+.topbar-divider {
+  width: 1px; height: 24px;
+  background: var(--line);
+}
+
+.topbar-notif {
+  width: 36px; height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.25s;
+  position: relative;
+}
+.topbar-notif:hover { border-color: var(--accent); color: var(--accent); }
+.topbar-notif svg { width: 15px; height: 15px; stroke: currentColor; }
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--red);
+}
+
+.topbar-cta {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, var(--accent), #00c4a0);
+  color: #06080d;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-family: 'Bebas Neue';
+  font-size: 0.82rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(0,229,180,0.2);
+}
+.topbar-cta:hover { box-shadow: 0 6px 24px rgba(0,229,180,0.35); transform: translateY(-1px); }
+.topbar-cta svg { width: 13px; height: 13px; stroke: currentColor; }
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+.view { display: none; padding: 32px 28px; animation: fadeUp 0.4s ease both; }
+.view.active { display: block; }
+
+/* ============================================================
+   VIEW HEADER
+   ============================================================ */
+.view-header { margin-bottom: 28px; }
+.view-header-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.view-title { font-family: 'Bebas Neue'; font-size: 2.2rem; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+.view-title span { color: var(--accent); }
+.view-sub { font-family: 'DM Mono'; font-size: 0.67rem; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+
+/* ============================================================
+   ALERT BANNER
+   ============================================================ */
+.alert-banner {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,77,109,0.07);
+  border: 1px solid rgba(255,77,109,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.4s ease both;
+}
+.alert-banner svg { width: 14px; height: 14px; stroke: var(--red); flex-shrink: 0; }
+.alert-banner-text { font-family: 'DM Mono'; font-size: 0.65rem; letter-spacing: 1px; color: rgba(255,255,255,0.6); }
+.alert-banner-text strong { color: var(--red); }
+.alert-banner-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 1rem; }
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: all 0.3s;
+  animation: fadeUp 0.5s ease both;
+}
+.kpi:hover {
+  border-color: rgba(255,255,255,0.13);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+.kpi:hover .kpi-glow { opacity: 1; }
+
+.kpi-glow {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.kpi-glow.green  { background: radial-gradient(ellipse at 0% 100%, rgba(0,229,180,0.07) 0%, transparent 60%); }
+.kpi-glow.red    { background: radial-gradient(ellipse at 0% 100%, rgba(255,77,109,0.07) 0%, transparent 60%); }
+.kpi-glow.gold   { background: radial-gradient(ellipse at 0% 100%, rgba(240,192,64,0.07) 0%, transparent 60%); }
+.kpi-glow.blue   { background: radial-gradient(ellipse at 0% 100%, rgba(77,127,255,0.07) 0%, transparent 60%); }
+.kpi-glow.purple { background: radial-gradient(ellipse at 0% 100%, rgba(168,85,247,0.07) 0%, transparent 60%); }
+
+.kpi-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.kpi-icon.green  { background: rgba(0,229,180,0.1); border: 1px solid rgba(0,229,180,0.2); }
+.kpi-icon.red    { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.2); }
+.kpi-icon.gold   { background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.2); }
+.kpi-icon.blue   { background: rgba(77,127,255,0.1); border: 1px solid rgba(77,127,255,0.2); }
+.kpi-icon.purple { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.2); }
+.kpi-icon svg { width: 14px; height: 14px; stroke: currentColor; }
+.kpi-icon.green  svg { color: var(--accent); }
+.kpi-icon.red    svg { color: var(--red); }
+.kpi-icon.gold   svg { color: var(--gold); }
+.kpi-icon.blue   svg { color: var(--blue); }
+.kpi-icon.purple svg { color: var(--purple); }
+
+.kpi-val {
+  font-family: 'Bebas Neue';
+  font-size: 2.6rem;
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-val.green  { color: var(--accent); }
+.kpi-val.red    { color: var(--red); }
+.kpi-val.gold   { color: var(--gold); }
+.kpi-val.blue   { color: var(--blue); }
+.kpi-val.purple { color: var(--purple); }
+
+.kpi-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+
+.kpi-footer { display: flex; align-items: center; gap: 6px; }
+
+.kpi-change {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.2);
+}
+
+.kpi-trend {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+}
+.kpi-trend.up   { color: var(--accent); }
+.kpi-trend.down { color: var(--red); }
+
+.kpi-accent-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.kpi-accent-bar.green  { background: linear-gradient(90deg, var(--accent), rgba(0,229,180,0.3)); }
+.kpi-accent-bar.red    { background: linear-gradient(90deg, var(--red), rgba(255,77,109,0.3)); }
+.kpi-accent-bar.gold   { background: linear-gradient(90deg, var(--gold), rgba(240,192,64,0.3)); }
+.kpi-accent-bar.blue   { background: linear-gradient(90deg, var(--blue), rgba(77,127,255,0.3)); }
+.kpi-accent-bar.purple { background: linear-gradient(90deg, var(--purple), rgba(168,85,247,0.3)); }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.25s;
+}
+.card:hover { border-color: rgba(255,255,255,0.1); }
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Bebas Neue';
+  font-size: 0.95rem;
+  letter-spacing: 3px;
+}
+.card-title-icon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-title-icon svg { width: 11px; height: 11px; stroke: currentColor; }
+
+.card-badge {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  border-radius: 100px;
+  padding: 3px 10px;
+}
+.card-badge.live  { background: rgba(0,229,180,0.08); border: 1px solid rgba(0,229,180,0.2); color: var(--accent); }
+.card-badge.warn  { background: rgba(240,192,64,0.08); border: 1px solid rgba(240,192,64,0.2); color: var(--gold); }
+.card-badge.info  { background: rgba(77,127,255,0.08); border: 1px solid rgba(77,127,255,0.2); color: var(--blue); }
+.card-badge.alert { background: rgba(255,77,109,0.08); border: 1px solid rgba(255,77,109,0.2); color: var(--red); }
+
+/* ============================================================
+   LAYOUT GRIDS
+   ============================================================ */
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-1-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3   { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 16px; }
+.grid-4   { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 16px; }
+
+@media(max-width:1200px) {
+  .grid-2-1 { grid-template-columns: 1fr; }
+  .grid-3   { grid-template-columns: 1fr 1fr; }
+  .grid-4   { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:800px) {
+  .grid-1-1 { grid-template-columns: 1fr; }
+  .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   LIVE STAGE CARD
+   ============================================================ */
+.stage-card {
+  background: linear-gradient(135deg, rgba(0,229,180,0.06) 0%, rgba(0,184,255,0.04) 100%);
+  border: 1px solid rgba(0,229,180,0.18);
+  border-radius: var(--radius);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-card::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(0,229,180,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stage-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.stage-live-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,77,109,0.12);
+  border: 1px solid rgba(255,77,109,0.3);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: var(--red);
+}
+.stage-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red); box-shadow: 0 0 8px var(--red);
+  animation: blinkDot 1s infinite;
+}
+
+.stage-number {
+  font-family: 'Bebas Neue';
+  font-size: 3.8rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(0,229,180,0.3);
+}
+
+.stage-graduate-name {
+  font-family: 'Syne';
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.stage-graduate-id {
+  font-family: 'DM Mono';
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+.stage-graduate-prog {
+  font-family: 'DM Mono';
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.stage-progress-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 20px;
+}
+.stage-progress-track {
+  flex: 1; height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.stage-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+.stage-progress-label {
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   FACE VERIFICATION PANEL
+   ============================================================ */
+.face-verify-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.face-card {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.02);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  transition: all 0.25s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.face-card:hover { border-color: rgba(255,255,255,0.12); transform: scale(1.03); }
+
+.face-card-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue';
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.face-card.verified   .face-card-avatar { background: rgba(0,229,180,0.12); color: var(--accent); border: 1px solid rgba(0,229,180,0.3); }
+.face-card.pending    .face-card-avatar { background: rgba(240,192,64,0.12); color: var(--gold); border: 1px solid rgba(240,192,64,0.3); }
+.face-card.failed     .face-card-avatar { background: rgba(255,77,109,0.12); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
+.face-card.processing .face-card-avatar { background: rgba(0,184,255,0.12); color: var(--accent2); border: 1px solid rgba(0,184,255,0.3); animation: spinSlow 2s linear infinite; }
+
+@keyframes spinSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.face-card-name {
+  font-family: 'DM Mono';
+  font-size: 0.48rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.face-card-status-dot {
+  position: absolute; bottom: 6px; right: 6px;
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.face-card.verified   .face-card-status-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.face-card.pending    .face-card-status-dot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.face-card.failed     .face-card-status-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.face-card.processing .face-card-status-dot { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); animation: blinkDot 0.8s infinite; }
+
+.face-stats-row {
+  display: flex; gap: 8px;
+}
+.face-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+}
+.face-stat-val {
+  font-family: 'Bebas Neue';
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.face-stat-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ============================================================
+   QUEUE LIST
+   ============================================================ */
+.queue-list { display: flex; flex-direction: column; gap: 6px; }
+
+.queue-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  transition: all 0.2s;
+}
+.queue-item:hover { background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.1); }
+.queue-item.current {
+  background: rgba(0,229,180,0.06);
+  border-color: rgba(0,229,180,0.2);
+}
+
+.queue-num {
+  font-family: 'Bebas Neue';
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.15);
+  min-width: 32px;
+}
+.queue-item.current .queue-num { color: var(--accent); text-shadow: 0 0 16px rgba(0,229,180,0.4); }
+
+.queue-info { flex: 1; min-width: 0; }
+.queue-name {
+  font-family: 'Syne';
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.queue-meta {
+  font-family: 'DM Mono';
+  font-size: 0.57rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+}
+
+.queue-stage { display: flex; align-items: center; gap: 6px; }
+.queue-stage-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.queue-stage-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.57rem;
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   AI RECOMMENDATION PANEL
+   ============================================================ */
+.ai-rec-panel {
+  background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(0,184,255,0.04));
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: var(--radius);
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+}
+.ai-rec-panel::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ai-rec-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.ai-rec-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.25);
+  display: flex; align-items: center; justify-content: center;
+}
+.ai-rec-icon svg { width: 15px; height: 15px; stroke: var(--purple); }
+.ai-rec-title { font-family: 'Bebas Neue'; font-size: 0.95rem; letter-spacing: 3px; color: var(--purple); }
+.ai-rec-model { font-family: 'DM Mono'; font-size: 0.55rem; letter-spacing: 2px; color: rgba(168,85,247,0.5); }
+
+.ai-insight {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(168,85,247,0.1);
+  margin-bottom: 8px;
+}
+.ai-insight-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.57rem;
+  letter-spacing: 2px;
+  color: var(--purple);
+  margin-bottom: 5px;
+}
+.ai-insight-text {
+  font-family: 'Syne';
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.7);
+}
+
+.ai-confidence {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px;
+}
+.ai-conf-lbl { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.ai-conf-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.ai-conf-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent2)); border-radius: 2px; }
+.ai-conf-val { font-family: 'Bebas Neue'; font-size: 1rem; letter-spacing: 1px; color: var(--purple); }
+
+/* ============================================================
+   VOTING CHART
+   ============================================================ */
+.vote-bars { display: flex; flex-direction: column; gap: 10px; }
+
+.vote-bar-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.vote-bar-lbl { font-family: 'DM Mono'; font-size: 0.62rem; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+.vote-bar-val { font-family: 'Bebas Neue'; font-size: 0.9rem; letter-spacing: 1px; }
+.vote-bar-track { height: 5px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+.vote-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+/* ============================================================
+   COURSE DONUT
+   ============================================================ */
+.donut-wrapper { display: flex; align-items: center; gap: 24px; }
+.donut-svg { flex-shrink: 0; }
+.donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.donut-legend-item { display: flex; align-items: center; gap: 8px; }
+.donut-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.donut-legend-lbl { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 1px; color: rgba(255,255,255,0.5); flex: 1; }
+.donut-legend-val { font-family: 'Bebas Neue'; font-size: 0.9rem; letter-spacing: 1px; }
+
+/* ============================================================
+   HALL STATUS GRID
+   ============================================================ */
+.hall-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hall-item {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.015);
+  transition: all 0.25s;
+}
+.hall-item:hover { border-color: rgba(255,255,255,0.1); }
+
+.hall-item-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.hall-item-name {
+  font-family: 'DM Mono';
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+}
+
+.hall-item-status {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+.hall-item-status.open   { background: rgba(0,229,180,0.1); color: var(--accent); border: 1px solid rgba(0,229,180,0.2); }
+.hall-item-status.busy   { background: rgba(240,192,64,0.1); color: var(--gold); border: 1px solid rgba(240,192,64,0.2); }
+.hall-item-status.closed { background: rgba(255,77,109,0.1); color: var(--red); border: 1px solid rgba(255,77,109,0.2); }
+.hall-item-status.ready  { background: rgba(77,127,255,0.1); color: var(--blue); border: 1px solid rgba(77,127,255,0.2); }
+
+.hall-count {
+  font-family: 'Bebas Neue';
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.hall-sublabel {
+  font-family: 'DM Mono';
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.25);
+}
+.hall-bar { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.hall-bar-fill { height: 100%; border-radius: 2px; }
+
+/* ============================================================
+   NOTIFICATIONS PANEL
+   ============================================================ */
+.notif-list { display: flex; flex-direction: column; gap: 0; max-height: 320px; overflow-y: auto; }
+.notif-list::-webkit-scrollbar { width: 3px; }
+.notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.notif-item {
+  display: flex; gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  align-items: flex-start;
+  animation: fadeUp 0.3s ease both;
+}
+.notif-item:last-child { border-bottom: none; }
+
+.notif-indicator {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.notif-indicator.green  { background: var(--accent); box-shadow: 0 0 6px rgba(0,229,180,0.5); }
+.notif-indicator.gold   { background: var(--gold); box-shadow: 0 0 6px rgba(240,192,64,0.5); }
+.notif-indicator.blue   { background: var(--blue); box-shadow: 0 0 6px rgba(77,127,255,0.5); }
+.notif-indicator.red    { background: var(--red); box-shadow: 0 0 6px rgba(255,77,109,0.5); }
+.notif-indicator.purple { background: var(--purple); box-shadow: 0 0 6px rgba(168,85,247,0.5); }
+
+.notif-content { flex: 1; }
+.notif-text {
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.4;
+}
+.notif-meta {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.25);
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.table-wrap { overflow-x: auto; }
+.table-wrap::-webkit-scrollbar { height: 4px; }
+.table-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 1px solid var(--line); }
+th {
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.25);
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+td { padding: 11px 12px; font-size: 0.82rem; }
+.td-name { font-family: 'Syne'; font-weight: 700; font-size: 0.84rem; margin-bottom: 2px; }
+.td-id   { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.td-cat  { font-family: 'DM Mono'; font-size: 0.62rem; letter-spacing: 1px; color: var(--accent); }
+.td-date { font-family: 'DM Mono'; font-size: 0.62rem; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+
+.status-pill {
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-family: 'DM Mono';
+  font-size: 0.56rem;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.sp-pending  { background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.25); color: var(--gold); }
+.sp-approved { background: rgba(0,229,180,0.1); border: 1px solid rgba(0,229,180,0.25); color: var(--accent); }
+.sp-review   { background: rgba(77,127,255,0.1); border: 1px solid rgba(77,127,255,0.25); color: var(--blue); }
+.sp-rejected { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.25); color: var(--red); }
+
+.action-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: rgba(255,255,255,0.35);
+  font-family: 'DM Mono';
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.22s;
+  margin-right: 4px;
+}
+.action-btn:hover        { border-color: var(--accent); color: var(--accent); }
+.action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* ============================================================
+   FILTER ROW
+   ============================================================ */
+.filter-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.filter-btn {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 7px 15px;
+  font-family: 'DM Mono';
+  font-size: 0.63rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.38);
+  cursor: pointer;
+  transition: all 0.22s;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,229,180,0.05);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: #0b0f18;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 36px;
+  width: 90%; max-width: 500px;
+  transform: translateY(20px) scale(0.97);
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.modal-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(0,229,180,0.08);
+  border: 1px solid rgba(0,229,180,0.2);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-icon svg { width: 18px; height: 18px; stroke: var(--accent); }
+.modal-title { font-family: 'Bebas Neue'; font-size: 1.5rem; letter-spacing: 3px; }
+.modal-sub { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 2px; color: rgba(255,255,255,0.3); }
+
+.modal-form-group { margin-bottom: 15px; }
+.modal-label {
+  display: block;
+  font-family: 'DM Mono';
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 8px;
+}
+.modal-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 9px;
+  padding: 12px 14px;
+  color: var(--fg);
+  font-family: 'DM Mono';
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.modal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,180,0.08); }
+.modal-select option { background: #0b0f18; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+.modal-save {
+  flex: 1;
+  background: linear-gradient(135deg, var(--accent), #00c4a0);
+  color: #06080d;
+  border: none;
+  border-radius: 9px;
+  padding: 13px;
+  font-family: 'Bebas Neue';
+  font-size: 0.92rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 14px rgba(0,229,180,0.2);
+}
+.modal-save:hover { box-shadow: 0 6px 20px rgba(0,229,180,0.35); transform: translateY(-1px); }
+.modal-cancel {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 13px 20px;
+  color: rgba(255,255,255,0.35);
+  font-family: 'DM Mono';
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.22s;
+}
+.modal-cancel:hover { border-color: rgba(255,255,255,0.2); color: var(--fg); }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: rgba(0,229,180,0.08);
+  border: 1px solid rgba(0,229,180,0.25);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 500;
+  box-shadow: 0 8px 32px rgba(0,229,180,0.1);
+  backdrop-filter: blur(12px);
+}
+.toast.show { opacity: 1; transform: translateX(0); }
+
+/* ============================================================
+   ANALYTICS BARS
+   ============================================================ */
+.mini-bar-list { display: flex; flex-direction: column; gap: 12px; }
+.mini-bar-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.mini-bar-lbl { font-family: 'DM Mono'; font-size: 0.62rem; letter-spacing: 1px; color: rgba(255,255,255,0.45); }
+.mini-bar-val { font-family: 'Bebas Neue'; font-size: 0.9rem; letter-spacing: 1px; color: var(--accent); }
+.mini-bar-track { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+.mini-bar-fill  { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+/* ============================================================
+   CATEGORIES GRID
+   ============================================================ */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width: 900px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-260px); width: 260px; }
+  .sidebar.open { transform: translateX(0); }
+  .sb-toggle { display: flex; }
+  .main { margin-left: 0; }
+  .topbar { padding: 0 16px 0 64px; }
+  .view { padding: 24px 16px; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideRight { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+
+.delay-1 { animation-delay: 0.06s; }
+.delay-2 { animation-delay: 0.12s; }
+.delay-3 { animation-delay: 0.18s; }
+.delay-4 { animation-delay: 0.24s; }
+.delay-5 { animation-delay: 0.30s; }
+
+.glow-card {
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+.glow-card:hover {
+  box-shadow: 0 0 0 1px rgba(0,229,180,0.12), 0 8px 40px rgba(0,229,180,0.06);
+  border-color: rgba(0,229,180,0.18) !important;
+}
+
+.scan-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,180,0.15), transparent);
+  animation: scan 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes scan { from { top: 0%; } to { top: 100%; } }
+</style>
+</head>
+<body>
+
+<button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+          <path d="M15 2l2 2-2 2"/><path d="M9 2L7 4l2 2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="sb-name">SMARTCONVO</div>
+      </div>
+    </div>
+    <div class="sb-tagline">AI COMMAND CENTER v2.4.1</div>
+    <div class="sb-badges">
+      <span class="sb-badge admin">ADMIN</span>
+      <span class="sb-badge live">● LIVE</span>
+    </div>
+  </div>
+
+  <div class="sb-status-row">
+    <div class="sb-status-dot"></div>
+    <div class="sb-status-text">ALL SYSTEMS OPERATIONAL</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-lbl">Command</div>
+<button class="sb-item active" onclick="showView('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      AI Command Center
+    </button>
+
+     <div class="sb-section-lbl">Convocation</div>
+    <button class="sb-item" onclick="location.href='admin-live-monitoring.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+      Live Monitoring
+      <span class="badge-count">LIVE</span>
+    </button>
+    <button class="sb-item" onclick="location.href='admin-queue-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Queue Management
+    </button>
+    <button class="sb-item" onclick="location.href='admin-face-verification.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 1 1 6 0c0 1.5-1.5 2.5-3 3v2"/><circle cx="12" cy="20" r="0.5" fill="currentColor"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>
+      Face Verification
+      <span class="badge-alert">14</span>
+    </button>
+
+    <div class="sb-section-lbl">Management</div>
+    <button class="sb-item" onclick="location.href='admin-student-registry.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Student Registry
+    </button>
+    <button class="sb-item" onclick="location.href='admin-submissions.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Submissions
+      <span class="badge-count">13</span>
+    </button>
+    <button class="sb-item" onclick="location.href='admin-studentmanagement.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
+      Nominees & Awards
+    </button>
+
+    <div class="sb-section-lbl">Intelligence</div>
+    <button class="sb-item" onclick="location.href='admin-analytics-reports.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics & Reports
+    </button>
+    <button class="sb-item" onclick="location.href='admin-award-catagory.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>
+      Award Categories
+    </button>
+
+    <div class="sb-section-lbl">Settings</div>
+    <button class="sb-item" onclick="location.href='admin-settings.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V22a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 20.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09A1.65 1.65 0 0 0 19.4 15z"/></svg>
+      Settings
+    </button>
+
+    <button class="sb-item" onclick="location.href='admin-course-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20"/><path d="M20 2v17l-6-3-6 3V2"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+      Course Management
+    </button>
+
+    <button class="sb-item" onclick="location.href='admin-voting-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7"/></svg>
+      Voting Management
+    </button>
+  </nav>
+
+
+  <div class="sb-footer">
+    <div class="sb-user-row">
+      <div class="sb-avatar" id="sb-avatar">AD</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sb-user">Admin</div>
+        <div class="sb-user-role">SYSTEM ADMINISTRATOR</div>
+      </div>
+    </div>
+    <button class="sb-logout" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      SIGN OUT
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title" id="topbar-title">AI COMMAND CENTER</span>
+      <span class="topbar-breadcrumb" id="topbar-breadcrumb">SMARTCONVO / DASHBOARD</span>
+    </div>
+    <div class="topbar-right">
+      <div style="text-align:right">
+        <div class="topbar-time" id="topbar-time"></div>
+        <div class="topbar-date" id="topbar-date"></div>
+      </div>
+      <div class="topbar-divider"></div>
+      <button class="topbar-notif" onclick="showToast('No new critical alerts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </button>
+      <button class="topbar-cta" onclick="openModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        ADD NOMINEE
+      </button>
+    </div>
+  </header>
+
+  <div id="view-dashboard" class="view active">
+
+    <div class="alert-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="alert-banner-text"><strong>ALERT:</strong> Iskandar Zulkarnain Bin Muhammad (2402077) & Nur Fadhilatul Akma (2402086) require face re-scan — camera angle issue detected. Immediate action recommended.</div>
+      <button class="alert-banner-close" onclick="this.parentElement.style.display='none'">✕</button>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi glow-card" style="animation-delay:0s">
+        <div class="kpi-glow green"></div>
+        <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="kpi-val green">347</div>
+        <div class="kpi-lbl">TOTAL GRADUATES</div>
+        <div class="kpi-footer"><span class="kpi-trend up">↑ 12%</span><span class="kpi-change">vs last session</span></div>
+        <div class="kpi-accent-bar green"></div>
+      </div>
+      <div class="kpi glow-card delay-1" style="animation-delay:0.07s">
+        <div class="kpi-glow blue"></div>
+        <div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="kpi-val blue">1,024</div>
+        <div class="kpi-lbl">ACTIVE GUESTS</div>
+        <div class="kpi-footer"><span class="kpi-trend up">↑ 8%</span><span class="kpi-change">hall capacity 78%</span></div>
+        <div class="kpi-accent-bar blue"></div>
+      </div>
+      <div class="kpi glow-card delay-2" style="animation-delay:0.14s">
+        <div class="kpi-glow gold"></div>
+        <div class="kpi-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <div class="kpi-val gold">28</div>
+        <div class="kpi-lbl">QUEUE ACTIVE</div>
+        <div class="kpi-footer"><span class="kpi-change">avg wait 4.2 min</span></div>
+        <div class="kpi-accent-bar gold"></div>
+      </div>
+      <div class="kpi glow-card delay-3" style="animation-delay:0.21s">
+        <div class="kpi-glow green"></div>
+        <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="kpi-val green">94.3%</div>
+        <div class="kpi-lbl">FACE VERIFY RATE</div>
+        <div class="kpi-footer"><span class="kpi-trend up">↑ 2.1%</span><span class="kpi-change">AI accuracy</span></div>
+        <div class="kpi-accent-bar green"></div>
+      </div>
+      <div class="kpi glow-card delay-4" style="animation-delay:0.28s">
+        <div class="kpi-glow purple"></div>
+        <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg></div>
+        <div class="kpi-val purple">54</div>
+        <div class="kpi-lbl">AWARD CANDIDATES</div>
+        <div class="kpi-footer"><span class="kpi-change">across 12 categories</span></div>
+        <div class="kpi-accent-bar purple"></div>
+      </div>
+      <div class="kpi glow-card delay-5" style="animation-delay:0.34s">
+        <div class="kpi-glow red"></div>
+        <div class="kpi-icon red"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="kpi-val red">2</div>
+        <div class="kpi-lbl">SYSTEM ALERTS</div>
+        <div class="kpi-footer"><span class="kpi-change">requires attention</span></div>
+        <div class="kpi-accent-bar red"></div>
+      </div>
+    </div>
+
+    <div class="grid-2-1" style="margin-bottom:16px">
+      <div class="stage-card" style="animation:fadeUp 0.5s 0.15s ease both">
+        <div class="scan-line"></div>
+        <div class="stage-top">
+          <div>
+            <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:8px">CURRENT ON STAGE</div>
+            <div class="stage-graduate-name">Danish Shazwan Bin Suwandi</div>
+            <div class="stage-graduate-id">2402076 · SEAT 01</div>
+            <div class="stage-graduate-prog">Diploma in Big Data Analytics</div>
+          </div>
+          <div style="text-align:right">
+            <div class="stage-live-pill"><div class="stage-live-dot"></div>LIVE</div>
+            <div style="margin-top:12px">
+              <div style="font-family:'DM Mono';font-size:0.55rem;letter-spacing:2px;color:rgba(255,255,255,0.25);margin-bottom:4px">GRADUATE NO.</div>
+              <div class="stage-number">076</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+          <div style="padding:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;text-align:center">
+            <div style="font-family:'DM Mono';font-size:0.55rem;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:4px">FACE SCAN</div>
+            <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--accent)">VERIFIED</div>
+          </div>
+          <div style="padding:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;text-align:center">
+            <div style="font-family:'DM Mono';font-size:0.55rem;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:4px">ROBE</div>
+            <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--blue)">COLLECTED</div>
+          </div>
+          <div style="padding:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;text-align:center">
+            <div style="font-family:'DM Mono';font-size:0.55rem;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:4px">AWARD</div>
+            <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:var(--gold)">NOMINEE</div>
+          </div>
+        </div>
+
+        <div class="stage-progress-row">
+          <div class="stage-progress-track">
+            <div class="stage-progress-fill" style="width:12.1%"></div>
+          </div>
+          <div class="stage-progress-label">42 / 347 COMPLETED</div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp 0.5s 0.25s ease both">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(0,229,180,0.08);border:1px solid rgba(0,229,180,0.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            LIVE FEED
+          </div>
+          <span class="card-badge live">REAL-TIME</span>
+        </div>
+        <div class="notif-list" id="notif-list"></div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="card glow-card" style="animation:fadeUp 0.5s 0.3s ease both">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(77,127,255,0.08);border:1px solid rgba(77,127,255,0.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+            </div>
+            HALL STATUS
+          </div>
+          <span class="card-badge live">LIVE</span>
+        </div>
+        <div class="hall-grid" id="hall-grid"></div>
+      </div>
+
+      <div class="card glow-card" style="animation:fadeUp 0.5s 0.36s ease both">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(240,192,64,0.08);border:1px solid rgba(240,192,64,0.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            QUEUE HEALTH
+          </div>
+          <span class="card-badge warn">MONITORING</span>
+        </div>
+        <div class="mini-bar-list" id="queue-health-bars"></div>
+      </div>
+
+      <div class="ai-rec-panel" style="animation:fadeUp 0.5s 0.42s ease both">
+        <div class="ai-rec-header">
+          <div class="ai-rec-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4-10"/><path d="M12 12l10-4"/></svg>
+          </div>
+          <div>
+            <div class="ai-rec-title">AI INSIGHTS</div>
+            <div class="ai-rec-model">SMARTCONVO MODEL v2.4</div>
+          </div>
+        </div>
+        <div class="ai-insight">
+          <div class="ai-insight-lbl">QUEUE PREDICTION</div>
+          <div class="ai-insight-text">Current flow pace suggests ceremony completion by <strong style="color:var(--accent)">14:35</strong>. Recommend releasing batch 5 at 13:00 to maintain 4-min average cadence.</div>
+        </div>
+        <div class="ai-insight">
+          <div class="ai-insight-lbl">FACE RECOGNITION ALERT</div>
+          <div class="ai-insight-text">Students <strong style="color:var(--gold)">2402077 & 2402086</strong> have low confidence scores (&lt;72%). Manual verification advised before stage entry.</div>
+        </div>
+        <div class="ai-confidence">
+          <span class="ai-conf-lbl">MODEL CONFIDENCE</span>
+          <div class="ai-conf-bar"><div class="ai-conf-fill" style="width:94%"></div></div>
+          <span class="ai-conf-val">94%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2-1" style="margin-bottom:16px">
+      <div class="card glow-card" style="animation:fadeUp 0.5s 0.45s ease both">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(0,229,180,0.08);border:1px solid rgba(0,229,180,0.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            FACE VERIFICATION QUEUE
+          </div>
+          <span class="card-badge live">AI SCANNING</span>
+        </div>
+        <div class="face-verify-grid" id="face-verify-grid"></div>
+        <div class="face-stats-row">
+          <div class="face-stat">
+            <div class="face-stat-val" style="color:var(--accent)">283</div>
+            <div class="face-stat-lbl">VERIFIED</div>
+          </div>
+          <div class="face-stat">
+            <div class="face-stat-val" style="color:var(--gold)">14</div>
+            <div class="face-stat-lbl">PENDING</div>
+          </div>
+          <div class="face-stat">
+            <div class="face-stat-val" style="color:var(--accent2)">3</div>
+            <div class="face-stat-lbl">PROCESSING</div>
+          </div>
+          <div class="face-stat">
+            <div class="face-stat-val" style="color:var(--red)">2</div>
+            <div class="face-stat-lbl">FAILED</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glow-card" style="animation:fadeUp 0.5s 0.5s ease both">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            VOTE ANALYTICS
+          </div>
+          <span class="card-badge info">LIVE COUNT</span>
+        </div>
+        <div class="vote-bars" id="vote-bars"></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'DM Mono';font-size:0.58rem;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:4px">TOTAL VOTES CAST</div>
+            <div style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px;color:var(--fg)">2,847</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'DM Mono';font-size:0.58rem;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:4px">VOTER TURNOUT</div>
+            <div style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px;color:var(--accent)">78.4%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glow-card" style="animation:fadeUp 0.5s 0.55s ease both">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-icon" style="background:rgba(77,127,255,0.08);border:1px solid rgba(77,127,255,0.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          RECENT SUBMISSIONS
+        </div>
+        <button class="filter-btn" onclick="showView('submissions', document.querySelector('.sb-item:nth-child(8)'))">VIEW ALL →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>STUDENT</th><th>PROJECT TITLE</th><th>CATEGORY</th><th>SUBMITTED</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-live" class="view">
+    <div class="view-header">
+      <div class="view-header-row">
+        <div>
+          <h1 class="view-title">Live <span>Monitoring</span></h1>
+          <p class="view-sub">Real-time convocation ceremony tracking and hall management</p>
+        </div>
+        <span class="card-badge live" style="font-size:0.7rem;padding:6px 16px">● CEREMONY IN PROGRESS</span>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">42</div><div class="kpi-lbl">GRADUATED TODAY</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow gold"></div><div class="kpi-val gold">28</div><div class="kpi-lbl">IN QUEUE</div><div class="kpi-accent-bar gold"></div></div>
+      <div class="kpi"><div class="kpi-glow blue"></div><div class="kpi-val blue">277</div><div class="kpi-lbl">AWAITING</div><div class="kpi-accent-bar blue"></div></div>
+      <div class="kpi"><div class="kpi-glow red"></div><div class="kpi-val red">5</div><div class="kpi-lbl">ABSENT / DEFER</div><div class="kpi-accent-bar red"></div></div>
+    </div>
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">NEXT IN QUEUE</div>
+          <span class="card-badge live">LIVE ORDER</span>
+        </div>
+        <div class="queue-list" id="queue-list-live"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">COURSE BREAKDOWN</div>
+          <span class="card-badge info">TODAY</span>
+        </div>
+        <div class="donut-wrapper" id="donut-wrapper">
+          <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--accent)"  stroke-width="16" stroke-dasharray="120 181.7" stroke-dashoffset="0" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--blue)"   stroke-width="16" stroke-dasharray="80 181.7"  stroke-dashoffset="-120" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--gold)"   stroke-width="16" stroke-dasharray="50 181.7"  stroke-dashoffset="-200" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--purple)" stroke-width="16" stroke-dasharray="35 181.7"  stroke-dashoffset="-250" stroke-linecap="round"/>
+            <text x="60" y="56" text-anchor="middle" fill="var(--fg)" font-family="'Bebas Neue'" font-size="20" letter-spacing="1">347</text>
+            <text x="60" y="70" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-family="'DM Mono'" font-size="7" letter-spacing="2">TOTAL</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--accent)"></div><span class="donut-legend-lbl">Comp. Science</span><span class="donut-legend-val" style="color:var(--accent)">120</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--blue)"></div><span class="donut-legend-lbl">Elect. & Comp.</span><span class="donut-legend-val" style="color:var(--blue)">85</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--gold)"></div><span class="donut-legend-lbl">Info. Systems</span><span class="donut-legend-val" style="color:var(--gold)">75</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--purple)"></div><span class="donut-legend-lbl">Data Science</span><span class="donut-legend-val" style="color:var(--purple)">67</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-queue" class="view">
+    <div class="view-header">
+      <h1 class="view-title">Queue <span>Management</span></h1>
+      <p class="view-sub">Monitor and manage live convocation queue progression</p>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow gold"></div><div class="kpi-val gold">28</div><div class="kpi-lbl">QUEUE ENTRIES</div><div class="kpi-accent-bar gold"></div></div>
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">16</div><div class="kpi-lbl">QR CHECK-IN</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow blue"></div><div class="kpi-val blue">9</div><div class="kpi-lbl">CONFIRMED</div><div class="kpi-accent-bar blue"></div></div>
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">6</div><div class="kpi-lbl">ROBE COLLECTED</div><div class="kpi-accent-bar green"></div></div>
+    </div>
+    <div class="grid-1-1">
+      <div class="card glow-card">
+        <div class="card-header">
+          <div class="card-title">STAGE QUEUE — UPCOMING</div>
+          <span class="card-badge live">LIVE</span>
+        </div>
+        <div class="queue-list" id="queue-list-main"></div>
+      </div>
+      <div class="card glow-card">
+        <div class="card-header">
+          <div class="card-title">VERIFICATION PIPELINE</div>
+          <span class="card-badge warn">MONITORING</span>
+        </div>
+        <div class="mini-bar-list" id="verify-pipeline-bars"></div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line)">
+          <div style="font-family:'DM Mono';font-size:0.58rem;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:10px">PIPELINE STAGES</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <div style="flex:1;text-align:center">
+              <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--blue)">QR</div>
+              <div style="font-family:'DM Mono';font-size:0.5rem;letter-spacing:1px;color:rgba(255,255,255,0.3)">SCAN</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.15);font-size:1.2rem">→</div>
+            <div style="flex:1;text-align:center">
+              <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--accent)">FACE</div>
+              <div style="font-family:'DM Mono';font-size:0.5rem;letter-spacing:1px;color:rgba(255,255,255,0.3)">VERIFY</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.15);font-size:1.2rem">→</div>
+            <div style="flex:1;text-align:center">
+              <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--gold)">ROBE</div>
+              <div style="font-family:'DM Mono';font-size:0.5rem;letter-spacing:1px;color:rgba(255,255,255,0.3)">COLLECT</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.15);font-size:1.2rem">→</div>
+            <div style="flex:1;text-align:center">
+              <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--purple)">STAGE</div>
+              <div style="font-family:'DM Mono';font-size:0.5rem;letter-spacing:1px;color:rgba(255,255,255,0.3)">ENTRY</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-faceverify" class="view">
+    <div class="view-header">
+      <div class="view-header-row">
+        <div>
+          <h1 class="view-title">Face <span>Verification</span></h1>
+          <p class="view-sub">AI-powered biometric identity verification for convocation entry</p>
+        </div>
+        <span class="card-badge alert">14 PENDING REVIEW</span>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">283</div><div class="kpi-lbl">VERIFIED</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow gold"></div><div class="kpi-val gold">14</div><div class="kpi-lbl">PENDING</div><div class="kpi-accent-bar gold"></div></div>
+      <div class="kpi"><div class="kpi-glow blue"></div><div class="kpi-val blue">3</div><div class="kpi-lbl">PROCESSING</div><div class="kpi-accent-bar blue"></div></div>
+      <div class="kpi"><div class="kpi-glow red"></div><div class="kpi-val red">2</div><div class="kpi-lbl">FAILED</div><div class="kpi-accent-bar red"></div></div>
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">94.3%</div><div class="kpi-lbl">ACCURACY RATE</div><div class="kpi-accent-bar green"></div></div>
+    </div>
+    <div class="grid-2-1">
+      <div class="card glow-card">
+        <div class="card-header">
+          <div class="card-title">VERIFICATION QUEUE — ALL STUDENTS</div>
+          <span class="card-badge live">AI ACTIVE</span>
+        </div>
+        <div class="face-verify-grid" id="face-verify-grid-full" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="ai-rec-panel">
+          <div class="ai-rec-header">
+            <div class="ai-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4-10"/><path d="M12 12l10-4"/></svg></div>
+            <div>
+              <div class="ai-rec-title">FACE RECOGNITION ENGINE</div>
+              <div class="ai-rec-model">DeepFace v3.2 — SMARTCONVO TUNED</div>
+            </div>
+          </div>
+          <div class="ai-insight">
+            <div class="ai-insight-lbl">MODEL STATUS</div>
+            <div class="ai-insight-text">Running at <strong style="color:var(--accent)">94.3% confidence</strong>. FaceNet backbone active. Processing 3 frames/sec per camera feed.</div>
+          </div>
+          <div class="ai-insight">
+            <div class="ai-insight-lbl">FLAGGED STUDENTS</div>
+            <div class="ai-insight-text">Students <strong style="color:var(--red)">Iskandar Zulkarnain (68%)</strong> and <strong style="color:var(--red)">Nur Fadhilatul Akma (71%)</strong> require manual override due to low confidence score.</div>
+          </div>
+          <div class="ai-confidence">
+            <span class="ai-conf-lbl">OVERALL CONFIDENCE</span>
+            <div class="ai-conf-bar"><div class="ai-conf-fill" style="width:94%"></div></div>
+            <span class="ai-conf-val">94%</span>
+          </div>
+        </div>
+        <div class="card glow-card">
+          <div class="card-header">
+            <div class="card-title">FAILED VERIFICATIONS</div>
+            <span class="card-badge alert">ACTION NEEDED</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:12px;background:rgba(255,77,109,0.05);border:1px solid rgba(255,77,109,0.15);border-radius:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-family:'Syne';font-weight:600;font-size:0.82rem">Iskandar Zulkarnain</span>
+                <span class="status-pill sp-rejected">FAILED</span>
+              </div>
+              <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:8px">2402077 · Confidence: 68%</div>
+              <div style="display:flex;gap:6px">
+                <button class="action-btn" onclick="showToast('Manual override approved for Iskandar')">Manual Override</button>
+                <button class="action-btn" onclick="showToast('Re-scan initiated for 2402077')">Re-scan</button>
+              </div>
+            </div>
+            <div style="padding:12px;background:rgba(255,77,109,0.05);border:1px solid rgba(255,77,109,0.15);border-radius:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-family:'Syne';font-weight:600;font-size:0.82rem">Nur Fadhilatul Akma</span>
+                <span class="status-pill sp-rejected">FAILED</span>
+              </div>
+              <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:8px">2402086 · Confidence: 71%</div>
+              <div style="display:flex;gap:6px">
+                <button class="action-btn" onclick="showToast('Manual override approved for Nur Fadhilatul Akma')">Manual Override</button>
+                <button class="action-btn" onclick="showToast('Re-scan initiated for 2402086')">Re-scan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-students" class="view">
+    <div class="view-header">
+      <h1 class="view-title">Student <span>Registry</span></h1>
+      <p class="view-sub">Manage all registered graduates and their convocation status</p>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">347</div><div class="kpi-lbl">TOTAL GRADUATES</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">283</div><div class="kpi-lbl">FACE VERIFIED</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow blue"></div><div class="kpi-val blue">301</div><div class="kpi-lbl">CHECKED IN</div><div class="kpi-accent-bar blue"></div></div>
+      <div class="kpi"><div class="kpi-glow gold"></div><div class="kpi-val gold">54</div><div class="kpi-lbl">NOMINEES</div><div class="kpi-accent-bar gold"></div></div>
+      <div class="kpi"><div class="kpi-glow red"></div><div class="kpi-val red">5</div><div class="kpi-lbl">ABSENT / DEFER</div><div class="kpi-accent-bar red"></div></div>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterStudents('all',this)">All Students</button>
+      <button class="filter-btn" onclick="filterStudents('verified',this)">Face Verified</button>
+      <button class="filter-btn" onclick="filterStudents('pending',this)">Pending Verify</button>
+      <button class="filter-btn" onclick="filterStudents('nominee',this)">Nominees</button>
+      <button class="filter-btn" onclick="filterStudents('absent',this)">Absent / Defer</button>
+    </div>
+    <div class="card glow-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>STUDENT</th><th>PROGRAMME</th><th>SEAT NO.</th><th>FACE VERIFY</th><th>CHECK-IN</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody id="students-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-submissions" class="view">
+    <div class="view-header">
+      <h1 class="view-title">All <span>Submissions</span></h1>
+      <p class="view-sub">Review, approve, or reject student project submissions for award consideration</p>
+    </div>
+    <div class="filter-row" id="filter-row">
+      <button class="filter-btn active" onclick="filterSubs('all',this)">All</button>
+      <button class="filter-btn" onclick="filterSubs('review',this)">Under Review</button>
+      <button class="filter-btn" onclick="filterSubs('approved',this)">Approved</button>
+      <button class="filter-btn" onclick="filterSubs('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="filterSubs('rejected',this)">Rejected</button>
+    </div>
+    <div class="card glow-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>STUDENT</th><th>PROJECT TITLE</th><th>CATEGORY</th><th>SUBMITTED</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody id="subs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-nominees" class="view">
+    <div class="view-header">
+      <div class="view-header-row">
+        <div>
+          <h1 class="view-title">Manage <span>Nominees</span></h1>
+          <p class="view-sub">View and manage confirmed nominees for each award category</p>
+        </div>
+        <button class="topbar-cta" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ADD NOMINEE
+        </button>
+      </div>
+    </div>
+    <div class="card glow-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>NAME</th><th>STUDENT ID</th><th>CATEGORY</th><th>AI SCORE</th><th>VOTES</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody id="nom-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-analytics" class="view">
+    <div class="view-header">
+      <h1 class="view-title">Analytics & <span>Reports</span></h1>
+      <p class="view-sub">Comprehensive intelligence reports and submission pattern analysis</p>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">87%</div><div class="kpi-lbl">SUBMISSION RATE</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow blue"></div><div class="kpi-val blue">4.2</div><div class="kpi-lbl">AVG AI SCORE</div><div class="kpi-accent-bar blue"></div></div>
+      <div class="kpi"><div class="kpi-glow gold"></div><div class="kpi-val gold">3</div><div class="kpi-lbl">DAYS TO CEREMONY</div><div class="kpi-accent-bar gold"></div></div>
+      <div class="kpi"><div class="kpi-glow green"></div><div class="kpi-val green">12</div><div class="kpi-lbl">TRACKS OPEN</div><div class="kpi-accent-bar green"></div></div>
+      <div class="kpi"><div class="kpi-glow purple"></div><div class="kpi-val purple">78.4%</div><div class="kpi-lbl">VOTER TURNOUT</div><div class="kpi-accent-bar purple"></div></div>
+    </div>
+    <div class="grid-2-1">
+      <div class="card glow-card">
+        <div class="card-header"><div class="card-title">SUBMISSIONS PER CATEGORY</div><span class="card-badge info">THIS CYCLE</span></div>
+        <div class="mini-bar-list" id="analytics-bars"></div>
+      </div>
+      <div class="card glow-card">
+        <div class="card-header"><div class="card-title">STATUS BREAKDOWN</div><span class="card-badge info">OVERVIEW</span></div>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px" id="status-breakdown"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-categories" class="view">
+    <div class="view-header">
+      <h1 class="view-title">Award <span>Categories</span></h1>
+      <p class="view-sub">Manage award tracks and category configurations</p>
+    </div>
+    <div class="cat-grid" id="cat-admin-grid"></div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
+      </div>
+      <div>
+        <div class="modal-title">Add Nominee</div>
+        <div class="modal-sub">REGISTER NEW AWARD CANDIDATE</div>
+      </div>
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label">FULL NAME</label>
+      <input class="modal-input" type="text" placeholder="Student full name">
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label">STUDENT ID</label>
+      <input class="modal-input" type="text" placeholder="2402076">
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label">PROGRAMME</label>
+      <input class="modal-input" type="text" placeholder="Diploma in Big Data Analytics">
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label">AWARD CATEGORY</label>
+      <select class="modal-input modal-select">
+        <option>iploma in Water Service Technology</option>
+        <option>Diploma in Computer Technology (Big Data Analytics)</option>
+        <option>Diploma in Engineering Technology — Smart Manufacturing</option>
+        <option>Diploma in Contemporary Furniture Production Technology</option>
+        <option>Diploma in Welding Competency</option>
+        <option>Diploma in Electrical High Voltage Charman Competency (A4)</option>
+        <option>Diploma in Electrical Competency (Domestic & Industrial) PW4</option>
+        <option>Diploma in Automotive Technology</option>
+        <option>Diploma in Automotive Technology — Vehicle Body Repair & Finishing</option>
+        <option>Certificate in Mechanical Engineering Technology (Design Drafting)</option>
+        <option>Certificate in Building Engineering Technology</option>
+        <option>Certificate in Foundry Technology</option>
+        <option>Certificate in Architecture</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveNominee()">Save Nominee</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ——— DATA (UPDATED WITH REAL STUDENT DATA) ——— */
+const submissions = [
+  { name:'Danish Shazwan Bin Suwandi', id:'2402076', title:'SmartConvo: AI Convocation Queue', cat:'Technology Innovation', date:'01 Apr', status:'approved' },
+  { name:'Iskandar Zulkarnain', id:'2402077', title:'IoT Wildlife Monitoring System', cat:'Best CV Application', date:'02 Apr', status:'review' },
+  { name:'Lily Liyana Lorraine', id:'2402078', title:'Sales Analytics Dashboard', cat:'Best Visualisation', date:'02 Apr', status:'approved' },
+  { name:'Mior Muhammad Ikmal', id:'2402079', title:'Big Data Pipeline for Traffic Prediction', cat:'Best Big Data Project', date:'03 Apr', status:'pending' },
+  { name:'Muhammad Ammar', id:'2402080', title:'Federated Learning in Healthcare', cat:'Best Research Paper', date:'03 Apr', status:'review' },
+  { name:'Muhammad Hafiz', id:'2402081', title:'Flood Early Warning Analytics', cat:'Industry Impact Award', date:'04 Apr', status:'approved' },
+  { name:'Muhammad Haziq Afiq', id:'2402082', title:'Multilingual Chatbot for Education', cat:'Best NLP Application', date:'04 Apr', status:'approved' },
+  { name:'Muhammad Syamsul Nazir', id:'2402083', title:'Real-Time Object Tracking System', cat:'Best Computer Vision', date:'05 Apr', status:'review' },
+  { name:'Nur Adilah', id:'2402084', title:'Personalised Learning Recommendation', cat:'Emerging Talent', date:'05 Apr', status:'pending' },
+  { name:'Nur Ain Solehah', id:'2402085', title:'Mental Health Sentiment Tracker', cat:'Best NLP Application', date:'06 Apr', status:'approved' },
+  { name:'Nur Fadhilatul Akma', id:'2402086', title:'Supply Chain Disruption Predictor', cat:'Industry Impact Award', date:'06 Apr', status:'review' },
+  { name:'Nur Fatin Nadiah', id:'2402087', title:'Energy Consumption Forecasting', cat:'Best Big Data Project', date:'07 Apr', status:'approved' },
+  { name:'Nursyazwanie', id:'2402088', title:'Generative Adversarial Network Art', cat:'Technology Innovation', date:'08 Apr', status:'pending' },
+];
+
+const nominees = [
+  { name:'Danish Shazwan Bin Suwandi', id:'2402076', cat:'Technology Innovation', score:95, votes:520, status:'approved' },
+  { name:'Lily Liyana Lorraine', id:'2402078', cat:'Best Visualisation', score:92, votes:487, status:'approved' },
+  { name:'Muhammad Haziq Afiq', id:'2402082', cat:'Best NLP Application', score:85, votes:291, status:'approved' },
+  { name:'Muhammad Hafiz', id:'2402081', cat:'Industry Impact Award', score:90, votes:405, status:'approved' },
+  { name:'Iskandar Zulkarnain', id:'2402077', cat:'Best CV Application', score:87, votes:318, status:'review' },
+  { name:'Nur Fatin Nadiah', id:'2402087', cat:'Best Big Data Project', score:81, votes:256, status:'approved' },
+];
+
+const categories = [
+  { name:'Best Overall Student Award', count:0, track:'Overall' },
+  { name:'Academic Excellence Award', count:0, track:'Academic' },
+  { name:"Dean's List Award", count:0, track:'Deans' },
+  { name:'Best Program Graduate', count:0, track:'Program' },
+  { name:'Outstanding Leadership Award', count:0, track:'Leadership' },
+  { name:'Extracurricular Achievement Award', count:0, track:'Extracurricular' },
+  { name:'Innovation & Research Award', count:0, track:'Innovation' },
+  { name:'Community Service Excellence Award', count:0, track:'Community' },
+  { name:'Best Final Year Project Award', count:0, track:'FinalYear' },
+];
+
+const students = [
+  { name:'Danish Shazwan Bin Suwandi', id:'2402076', prog:'CS (DS)', seat:'01', face:'verified', checkin:true, status:'nominee' },
+  { name:'Iskandar Zulkarnain Bin Muhammad', id:'2402077', prog:'CS (DS)', seat:'02', face:'failed', checkin:true, status:'active' },
+  { name:'Lily Liyana Lorraine Binti Jale', id:'2402078', prog:'CS', seat:'03', face:'verified', checkin:true, status:'nominee' },
+  { name:'Mior Muhammad Ikmal Bin Mior', id:'2402079', prog:'IS', seat:'04', face:'verified', checkin:true, status:'nominee' },
+  { name:'Muhammad Ammar Bin Mahadir', id:'2402080', prog:'CS', seat:'05', face:'verified', checkin:true, status:'active' },
+  { name:'Muhammad Hafiz Bin Hassan', id:'2402081', prog:'DS', seat:'06', face:'pending', checkin:false, status:'pending' },
+  { name:'Muhammad Haziq Afiq Bin Yazid', id:'2402082', prog:'EC', seat:'07', face:'processing', checkin:true, status:'active' },
+  { name:'Muhammad Syamsul Nazir Bin Samsuri', id:'2402083', prog:'DS', seat:'08', face:'verified', checkin:true, status:'active' },
+  { name:'Nur Adilah Binti Shamsuddin', id:'2402084', prog:'EC', seat:'09', face:'verified', checkin:false, status:'pending' },
+  { name:'Nur Ain Solehah Binti Muhd Fauzi', id:'2402085', prog:'EC', seat:'10', face:'verified', checkin:true, status:'nominee' },
+  { name:'Nur Fadhilatul Akma Binti Roslan', id:'2402086', prog:'DS', seat:'11', face:'failed', checkin:false, status:'pending' },
+  { name:'Nur Fatin Nadiah Binti Mohd Khir', id:'2402087', prog:'CS', seat:'12', face:'verified', checkin:true, status:'nominee' },
+  { name:'Nursyazwanie Binti Jaimi', id:'2402088', prog:'IS', seat:'13', face:'verified', checkin:true, status:'nominee' }
+];
+
+const queueData = [
+  { num:43, name:'Danish Shazwan Bin Suwandi', id:'2402076', prog:'CS (DS)', stage:'verified', stageColor:'#00e5b4' },
+  { num:44, name:'Iskandar Zulkarnain', id:'2402077', prog:'CS (DS)', stage:'pending', stageColor:'#f0c040' },
+  { num:45, name:'Lily Liyana Lorraine', id:'2402078', prog:'CS', stage:'verified', stageColor:'#00e5b4' },
+  { num:46, name:'Mior Muhammad Ikmal', id:'2402079', prog:'IS', stage:'verified', stageColor:'#00e5b4' },
+  { num:47, name:'Muhammad Ammar', id:'2402080', prog:'CS', stage:'robe', stageColor:'#4d7fff' },
+  { num:48, name:'Nur Adilah', id:'2402084', prog:'EC', stage:'checkin', stageColor:'#a855f7' },
+  { num:49, name:'Nursyazwanie', id:'2402088', prog:'IS', stage:'checkin', stageColor:'#a855f7' },
+];
+
+const faceData = [
+  { init:'DS', name:'Danish Shazwan', status:'verified' },
+  { init:'IZ', name:'Iskandar Zulkarnain', status:'failed' },
+  { init:'LL', name:'Lily Liyana', status:'verified' },
+  { init:'MM', name:'Mior Muhammad', status:'verified' },
+  { init:'MA', name:'Muhammad Ammar', status:'verified' },
+  { init:'MH', name:'Muhammad Hafiz', status:'pending' },
+  { init:'MH', name:'Muhammad Haziq', status:'processing' },
+  { init:'MS', name:'Syamsul Nazir', status:'verified' },
+  { init:'NA', name:'Nur Adilah', status:'verified' },
+  { init:'NA', name:'Nur Ain Solehah', status:'verified' },
+  { init:'NF', name:'Nur Fadhilatul', status:'failed' },
+  { init:'FN', name:'Nur Fatin', status:'verified' },
+  { init:'NJ', name:'Nursyazwanie', status:'verified' },
+];
+
+const hallData = [
+  { name:'MAIN GATE', status:'open',   statusText:'OPEN',   count:1024, label:'guests inside', pct:78, color:'var(--accent)' },
+  { name:'STAGE AREA', status:'busy',  statusText:'ACTIVE',  count:28,   label:'in queue', pct:55, color:'var(--gold)' },
+  { name:'ROBE ROOM', status:'ready',  statusText:'READY',   count:305,  label:'robes collected', pct:88, color:'var(--blue)' },
+  { name:'VIP LOUNGE', status:'open',  statusText:'OPEN',   count:42,   label:'VIP guests', pct:84, color:'var(--accent)' },
+];
+
+const notifications = [
+  { text:'Hall gate QR check-in enabled — all lanes active', time:'08:42', color:'green' },
+  { text:'Face verification batch: 12 approved by AI', time:'09:15', color:'green' },
+  { text:'Graduate #076 Danish Shazwan — on stage now', time:'10:01', color:'blue' },
+  { text:'Attendance confirmed: 301 students checked in', time:'10:03', color:'blue' },
+  { text:'Robe collection queue refreshed — 6 completed', time:'11:30', color:'gold' },
+  { text:'⚠ Alert: Iskandar Zulkarnain — re-scan required (68%)', time:'13:12', color:'red' },
+  { text:'⚠ Alert: Nur Fadhilatul Akma — manual verification needed', time:'13:14', color:'red' },
+  { text:'AI insight: Ceremony pace on track for 14:35 finish', time:'13:20', color:'purple' },
+  { text:'Voting analytics updated — 78.4% turnout recorded', time:'13:45', color:'green' },
+];
+
+const voteData = [
+  { lbl:'Best Overall Student Award', val:487, color:'var(--accent)', pct:100 },
+  { lbl:'Academic Excellence Award', val:405, color:'var(--blue)', pct:83 },
+  { lbl:"Dean's List Award", val:342, color:'var(--purple)', pct:70 },
+  { lbl:'Best Program Graduate', val:318, color:'var(--gold)', pct:65 },
+  { lbl:'Outstanding Leadership Award', val:296, color:'var(--accent2)', pct:61 },
+  { lbl:'Extracurricular Achievement Award', val:267, color:'var(--red)', pct:55 },
+];
+
+const statusClass = { pending:'sp-pending', approved:'sp-approved', review:'sp-review', rejected:'sp-rejected' };
+const statusText = { pending:'PENDING', approved:'APPROVED', review:'UNDER REVIEW', rejected:'REJECTED' };
+
+/* ——— INIT ——— */
+const userName = localStorage.getItem('userName') || 'Admin';
+const sbUserEl = document.getElementById('sb-user');
+if (sbUserEl) sbUserEl.textContent = userName;
+
+const initials = userName.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || 'AD';
+document.getElementById('sb-avatar').textContent = initials;
+
+/* ——— CLOCK ——— */
+function updateTime() {
+  const now = new Date();
+  const el = document.getElementById('topbar-time');
+  const de = document.getElementById('topbar-date');
+  if(el) el.textContent = now.toLocaleTimeString('en-MY', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  if(de) de.textContent = now.toLocaleDateString('en-MY', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+}
+setInterval(updateTime, 1000); updateTime();
+
+/* ——— SIDEBAR ——— */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+/* ——— VIEW SWITCHING (Navigation Function) ——— */
+const viewTitles = {
+  dashboard:   ['AI COMMAND CENTER', 'SMARTCONVO / DASHBOARD'],
+  live:        ['LIVE MONITORING', 'SMARTCONVO / CONVOCATION'],
+  queue:       ['QUEUE MANAGEMENT', 'SMARTCONVO / QUEUE'],
+  faceverify:  ['FACE VERIFICATION', 'SMARTCONVO / BIOMETRICS'],
+  students:    ['STUDENT REGISTRY', 'SMARTCONVO / STUDENTS'],
+  submissions: ['SUBMISSIONS', 'SMARTCONVO / MANAGE'],
+  nominees:    ['NOMINEES & AWARDS', 'SMARTCONVO / AWARDS'],
+  analytics:   ['ANALYTICS & REPORTS', 'SMARTCONVO / INTELLIGENCE'],
+  categories:  ['AWARD CATEGORIES', 'SMARTCONVO / CATEGORIES'],
+
+  settings: ['SETTINGS', 'SMARTCONVO / ADMIN / SETTINGS'],
+  courses:  ['COURSE MANAGEMENT', 'SMARTCONVO / ADMIN / COURSES'],
+  voting:   ['VOTING MANAGEMENT', 'SMARTCONVO / ADMIN / VOTING'],
+};
+
+function showView(view, btn) {
+  // Hide all views and show target
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  if(btn) btn.classList.add('active');
+  
+  // Update Header Title
+  const [title, crumb] = viewTitles[view] || [view,''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-breadcrumb').textContent = crumb;
+  
+  // Close mobile sidebar if open
+  document.getElementById('sidebar').classList.remove('open');
+  
+  // Render-on-demand features
+  if(view === 'submissions') renderSubs(currentFilter);
+  if(view === 'nominees') renderNominees();
+  if(view === 'categories') renderCategories();
+  if(view === 'students') renderStudents('all');
+  if(view === 'analytics') renderAnalytics();
+  
+  // Scroll to top automatically just like switching a page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ——— BUILD DASHBOARD ——— */
+
+// Notifications
+const notifList = document.getElementById('notif-list');
+if(notifList) notifications.forEach((n,i) => {
+  notifList.innerHTML += `<div class="notif-item" style="animation-delay:${i*0.05}s">
+    <div class="notif-indicator ${n.color}"></div>
+    <div class="notif-content">
+      <div class="notif-text">${n.text}</div>
+      <div class="notif-meta">${n.time} · Today</div>
+    </div>
+  </div>`;
+});
+
+// Hall Grid
+const hallGrid = document.getElementById('hall-grid');
+if(hallGrid) hallData.forEach(h => {
+  hallGrid.innerHTML += `<div class="hall-item">
+    <div class="hall-item-top">
+      <div class="hall-item-name">${h.name}</div>
+      <span class="hall-item-status ${h.status}">${h.statusText}</span>
+    </div>
+    <div class="hall-count" style="color:${h.color}">${h.count}</div>
+    <div class="hall-sublabel">${h.label}</div>
+    <div class="hall-bar"><div class="hall-bar-fill" style="width:${h.pct}%;background:${h.color}"></div></div>
+  </div>`;
+});
+
+// Queue Health
+const queueHealthBars = document.getElementById('queue-health-bars');
+const qhData = [
+  { label:'QR Check-in', value:16, color:'var(--accent)', pct:100 },
+  { label:'Face Verification', value:14, color:'var(--gold)', pct:87 },
+  { label:'Attendance Confirmed', value:9, color:'var(--blue)', pct:56 },
+  { label:'Robe Collection', value:6, color:'var(--accent)', pct:37 },
+  { label:'Pending Issues', value:2, color:'var(--red)', pct:12 },
+];
+if(queueHealthBars) qhData.forEach(item => {
+  queueHealthBars.innerHTML += `<div class="mini-bar-item">
+    <div class="mini-bar-header">
+      <span class="mini-bar-lbl">${item.label}</span>
+      <span class="mini-bar-val" style="color:${item.color}">${item.value}</span>
+    </div>
+    <div class="mini-bar-track">
+      <div class="mini-bar-fill" data-w="${item.pct}" style="width:0%;background:${item.color}"></div>
+    </div>
+  </div>`;
+});
+setTimeout(()=>{
+  document.querySelectorAll('#queue-health-bars .mini-bar-fill').forEach(b=>b.style.width=b.dataset.w+'%');
+}, 400);
+
+// Vote Bars
+const voteBarsEl = document.getElementById('vote-bars');
+if(voteBarsEl) voteData.forEach(v => {
+  voteBarsEl.innerHTML += `<div class="vote-bar-item">
+    <div class="vote-bar-top">
+      <span class="vote-bar-lbl">${v.lbl}</span>
+      <span class="vote-bar-val" style="color:${v.color}">${v.val}</span>
+    </div>
+    <div class="vote-bar-track">
+      <div class="vote-bar-fill" data-w="${v.pct}" style="width:0%;background:${v.color}"></div>
+    </div>
+  </div>`;
+});
+setTimeout(()=>{
+  document.querySelectorAll('#vote-bars .vote-bar-fill').forEach(b=>b.style.width=b.dataset.w+'%');
+}, 500);
+
+// Face Verify Grid (dashboard)
+const fvGrid = document.getElementById('face-verify-grid');
+if(fvGrid) faceData.forEach(f => {
+  fvGrid.innerHTML += `<div class="face-card ${f.status}">
+    <div class="face-card-avatar">${f.init}</div>
+    <div class="face-card-name">${f.name}</div>
+    <div class="face-card-status-dot"></div>
+  </div>`;
+});
+
+// Face Verify Grid (full page)
+const fvGridFull = document.getElementById('face-verify-grid-full');
+if(fvGridFull) {
+  [...faceData,...faceData.slice(0,4)].forEach(f => {
+    fvGridFull.innerHTML += `<div class="face-card ${f.status}">
+      <div class="face-card-avatar">${f.init}</div>
+      <div class="face-card-name">${f.name}</div>
+      <div class="face-card-status-dot"></div>
+    </div>`;
+  });
+}
+
+// Queue Lists
+function buildQueueList(elId) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML = '';
+  queueData.forEach((q,i) => {
+    el.innerHTML += `<div class="queue-item${i===0?' current':''}">
+      <div class="queue-num">${q.num}</div>
+      <div class="queue-info">
+        <div class="queue-name">${q.name}</div>
+        <div class="queue-meta">${q.id} · ${q.prog}</div>
+      </div>
+      <div class="queue-stage">
+        <div class="queue-stage-dot" style="background:${q.stageColor};box-shadow:0 0 6px ${q.stageColor}"></div>
+        <span class="queue-stage-lbl" style="color:${q.stageColor}">${q.stage.toUpperCase()}</span>
+      </div>
+    </div>`;
+  });
+}
+buildQueueList('queue-list-live');
+buildQueueList('queue-list-main');
+
+// Verify Pipeline Bars
+const vpBars = document.getElementById('verify-pipeline-bars');
+const vpData = [
+  { label:'QR Scan', value:301, color:'var(--blue)', pct:100 },
+  { label:'Face Verify', value:283, color:'var(--accent)', pct:94 },
+  { label:'Robe Collect', value:305, color:'var(--gold)', pct:88 },
+  { label:'Stage Ready', value:42, color:'var(--purple)', pct:14 },
+];
+if(vpBars) vpData.forEach(item => {
+  vpBars.innerHTML += `<div class="mini-bar-item">
+    <div class="mini-bar-header">
+      <span class="mini-bar-lbl">${item.label}</span>
+      <span class="mini-bar-val" style="color:${item.color}">${item.value}</span>
+    </div>
+    <div class="mini-bar-track">
+      <div class="mini-bar-fill" data-w="${item.pct}" style="width:0%;background:${item.color}"></div>
+    </div>
+  </div>`;
+});
+setTimeout(()=>{
+  const fills = document.querySelectorAll('#verify-pipeline-bars .mini-bar-fill');
+  fills.forEach(b=>b.style.width=b.dataset.w+'%');
+}, 400);
+
+// Recent submissions table
+const recentTbody = document.getElementById('recent-tbody');
+if(recentTbody) submissions.slice(0,6).forEach(s => {
+  recentTbody.innerHTML += `<tr>
+    <td><div class="td-name">${s.name}</div><div class="td-id">${s.id}</div></td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem">${s.title}</td>
+    <td><span class="td-cat">${s.cat}</span></td>
+    <td><span class="td-date">${s.date}</span></td>
+    <td><span class="status-pill ${statusClass[s.status]}">${statusText[s.status]}</span></td>
+    <td><button class="action-btn" onclick="approve(this,'approved')">✓</button><button class="action-btn danger" onclick="approve(this,'rejected')">✗</button></td>
+  </tr>`;
+});
+
+/* ——— STUDENTS ——— */
+let studentsFilter = 'all';
+function renderStudents(filter) {
+  studentsFilter = filter;
+  const tbody = document.getElementById('students-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  const filtered = filter === 'all' ? students : students.filter(s=>s.status===filter||s.face===filter);
+  filtered.forEach(s => {
+    const faceColor = { verified:'var(--accent)', failed:'var(--red)', pending:'var(--gold)', processing:'var(--accent2)' }[s.face] || 'var(--fg)';
+    tbody.innerHTML += `<tr>
+      <td><div class="td-name">${s.name}</div><div class="td-id">${s.id}</div></td>
+      <td><span class="td-cat">${s.prog}</span></td>
+      <td style="font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:1px;color:rgba(255,255,255,0.5)">${s.seat}</td>
+      <td><span class="status-pill" style="background:rgba(0,0,0,0.2);border-color:${faceColor};color:${faceColor}">${s.face.toUpperCase()}</span></td>
+      <td><span class="${s.checkin?'status-pill sp-approved':'status-pill sp-pending'}">${s.checkin?'CONFIRMED':'NOT YET'}</span></td>
+      <td><span class="status-pill ${s.status==='nominee'?'sp-approved':s.status==='active'?'sp-review':'sp-pending'}">${s.status.toUpperCase()}</span></td>
+      <td><button class="action-btn" onclick="showToast('Viewing ${s.name}')">View</button><button class="action-btn" onclick="showToast('Editing ${s.name}')">Edit</button></td>
+    </tr>`;
+  });
+}
+function filterStudents(filter, btn) {
+  document.querySelectorAll('#view-students .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStudents(filter);
+}
+
+/* ——— SUBMISSIONS ——— */
+let currentFilter = 'all';
+function renderSubs(filter) {
+  const tbody = document.getElementById('subs-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  const filtered = filter === 'all' ? submissions : submissions.filter(s=>s.status===filter);
+  filtered.forEach(s => {
+    tbody.innerHTML += `<tr>
+      <td><div class="td-name">${s.name}</div><div class="td-id">${s.id}</div></td>
+      <td style="font-size:0.78rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.title}</td>
+      <td><span class="td-cat">${s.cat}</span></td>
+      <td><span class="td-date">${s.date}</span></td>
+      <td><span class="status-pill ${statusClass[s.status]}">${statusText[s.status]}</span></td>
+      <td><button class="action-btn" onclick="approve(this,'approved')">✓</button><button class="action-btn danger" onclick="approve(this,'rejected')">✗</button></td>
+    </tr>`;
+  });
+}
+function filterSubs(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('#filter-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSubs(filter);
+}
+
+/* ——— NOMINEES ——— */
+function renderNominees() {
+  const tbody = document.getElementById('nom-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  nominees.forEach(n => {
+    tbody.innerHTML += `<tr>
+      <td><div class="td-name">${n.name}</div></td>
+      <td><div class="td-id">${n.id}</div></td>
+      <td><span class="td-cat">${n.cat}</span></td>
+      <td><span style="font-family:'Bebas Neue';font-size:1.15rem;color:var(--accent)">${n.score}</span></td>
+      <td><span style="font-family:'Bebas Neue';font-size:1.15rem;color:var(--purple)">${n.votes}</span></td>
+      <td><span class="status-pill ${statusClass[n.status]}">${statusText[n.status]}</span></td>
+      <td><button class="action-btn" onclick="showToast('Editing ${n.name}')">Edit</button><button class="action-btn danger" onclick="showToast('${n.name} removed')">Remove</button></td>
+    </tr>`;
+  });
+}
+
+/* ——— CATEGORIES ——— */
+const catColors = ['var(--accent)','var(--blue)','var(--purple)','var(--gold)','var(--red)','var(--accent2)'];
+function renderCategories() {
+  const g = document.getElementById('cat-admin-grid');
+  if(!g) return;
+  g.innerHTML = '';
+  categories.forEach((c,i) => {
+    const col = catColors[i % catColors.length];
+    g.innerHTML += `<div class="card glow-card" style="animation:fadeUp 0.4s ${i*0.04}s ease both">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-family:'Syne';font-weight:700;font-size:0.86rem;margin-bottom:6px">${c.name}</div>
+          <span style="background:rgba(0,0,0,0.3);border:1px solid ${col}30;border-radius:100px;padding:2px 10px;font-family:'DM Mono';font-size:0.55rem;letter-spacing:2px;color:${col}">${c.track}</span>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:2px;color:${col}">${c.count}</span>
+      </div>
+      <div style="font-family:'DM Mono';font-size:0.58rem;letter-spacing:1px;color:rgba(255,255,255,0.25);margin-bottom:12px">SUBMISSIONS</div>
+      <button class="action-btn" style="width:100%;text-align:center" onclick="showToast('Editing ${c.name}')">Edit Category</button>
+    </div>`;
+  });
+}
+
+/* ——— ANALYTICS ——— */
+function renderAnalytics() {
+  const bars = document.getElementById('analytics-bars');
+  if(bars && bars.innerHTML === '') {
+    const cats = [
+      { label:'Best Big Data', value:8 },
+      { label:'Technology Innovation', value:7 },
+      { label:'Best ML Model', value:6 },
+      { label:'Best NLP Application', value:6 },
+      { label:'Industry Impact', value:5 },
+      { label:'Best Visualisation', value:5 },
+      { label:'Best Computer Vision', value:4 },
+      { label:'Best Research Paper', value:4 },
+    ];
+    const max = 8;
+    cats.forEach(c => {
+      bars.innerHTML += `<div class="mini-bar-item">
+        <div class="mini-bar-header">
+          <span class="mini-bar-lbl">${c.label}</span>
+          <span class="mini-bar-val">${c.value}</span>
+        </div>
+        <div class="mini-bar-track">
+          <div class="mini-bar-fill" data-w="${Math.round(c.value/max*100)}" style="width:0%"></div>
+        </div>
+      </div>`;
+    });
+    setTimeout(()=>{ bars.querySelectorAll('.mini-bar-fill').forEach(b=>b.style.width=b.dataset.w+'%'); }, 200);
+  }
+
+  const sb = document.getElementById('status-breakdown');
+  if(sb && sb.innerHTML === '') {
+    const breakdown = [
+      { label:'Approved', count:28, color:'var(--accent)', pct:52 },
+      { label:'Under Review', count:14, color:'var(--blue)', pct:26 },
+      { label:'Pending', count:7, color:'var(--gold)', pct:13 },
+      { label:'Rejected', count:5, color:'var(--red)', pct:9 },
+    ];
+    breakdown.forEach(b => {
+      sb.innerHTML += `<div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-family:'DM Mono';font-size:0.62rem;letter-spacing:1px;color:rgba(255,255,255,0.45)">${b.label}</span>
+          <span style="font-family:'Bebas Neue';font-size:1.05rem;letter-spacing:1px;color:${b.color}">${b.count}</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${b.pct}%;background:${b.color};border-radius:2px"></div>
+        </div>
+      </div>`;
+    });
+  }
+}
+
+/* ——— ACTIONS ——— */
+function approve(btn, status) {
+  const pill = btn.closest('tr').querySelector('.status-pill');
+  if(pill) { pill.className = 'status-pill ' + statusClass[status]; pill.textContent = statusText[status]; }
+  showToast(status === 'approved' ? '✓ Submission approved' : '✗ Submission rejected');
+}
+
+/* ——— MODAL ——— */
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if(e.target === document.getElementById('modal')) closeModal(); });
+function saveNominee() { closeModal(); showToast('Nominee added successfully!'); }
+
+/* ——— TOAST ——— */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+/* ——— LOGOUT ——— */
+function logout() {
+  if(confirm('Sign out of SMARTCONVO Command Center?')) {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+}
+</script>
+</body>
+</html>
+

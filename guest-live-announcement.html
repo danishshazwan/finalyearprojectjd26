@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Live Announcements</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.55);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-y:auto; }
+
+.layout { display: flex; min-height: calc(100vh - 64px); }
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,0.01);
+  padding: 28px 18px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+.main { flex: 1; min-height: 100vh; overflow-y: auto; }
+
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0.025;
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* NAV */
+nav {
+  position: sticky; top:0; z-index:100;
+  background: rgba(6,8,11,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+  animation: fadeDown 0.6s ease both;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; }
+.nav-brand svg { width:24px; height:24px; color: var(--accent); }
+.nav-brand span { font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-user { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: var(--dim); }
+.nav-logout { background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+.nav-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+.nav-profile {
+  display:flex; align-items:center; gap:10px;
+  background: rgba(0,229,180,0.10);
+  border: 1px solid rgba(0,229,180,0.35);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 6px 14px;
+  text-decoration:none;
+  transition: all 0.3s;
+  font-family:'DM Mono';
+  font-size:0.7rem;
+  letter-spacing:2px;
+}
+.nav-profile:hover { background: rgba(0,229,180,0.18); transform: translateY(-1px); }
+.nav-profile-dot { width:7px; height:7px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+
+/* Sidebar */
+.sb-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding: 0 8px; }
+.sb-brand-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+.sb-brand-title { font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color: rgba(255,255,255,0.65); }
+.sb-section { display:flex; flex-direction: column; gap:10px; padding: 0 8px; }
+.sb-link {
+  width:100%;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--fg);
+  border-radius: 12px;
+  padding: 12px 12px;
+  cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  transition: all 0.3s;
+}
+.sb-link:hover { border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06); transform: translateX(4px); }
+.sb-icon { width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background: rgba(0,229,180,0.08); color: var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+.sb-text { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color: rgba(255,255,255,0.72); }
+.sb-footer { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; padding-left: 8px; padding-right: 8px; }
+.sb-footer-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.sb-footer-name { font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color: var(--accent); }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; position: relative; top: auto; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .main { min-height: auto; }
+}
+
+/* Header */
+.page-header {
+  padding: 100px 32px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+.page-header-eyebrow { font-family:'DM Mono'; font-size:0.72rem; letter-spacing:4px; color:var(--accent); margin-bottom:18px; animation: fadeUp 0.6s 0.1s ease both; }
+.page-header-title { font-family:'Bebas Neue'; font-size:clamp(3.1rem,7vw,5.2rem); letter-spacing:4px; line-height:0.95; margin-bottom:14px; animation: fadeUp 0.6s 0.2s ease both; }
+.page-header-title span { color: var(--accent); }
+.page-header-sub { font-size:1rem; color:var(--dim); max-width:720px; margin:0 auto; line-height:1.8; animation: fadeUp 0.6s 0.3s ease both; }
+
+.section { padding: 0 32px 80px; max-width:1200px; margin:0 auto; }
+
+.grid { display:grid; grid-template-columns: 1fr 0.85fr; gap:16px; }
+@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 18px;
+  overflow:hidden;
+  animation: fadeUp 0.5s ease both;
+}
+
+.card-title {
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:12px;
+  margin-bottom:12px;
+  font-family:'Syne';
+  font-weight:700;
+}
+.card-title .t { font-size:1rem; }
+
+.pill {
+  display:inline-flex; align-items:center; gap:10px;
+  background: rgba(0,229,180,0.08);
+  border: 1px solid rgba(0,229,180,0.2);
+  border-radius:100px;
+  padding: 6px 12px;
+  font-family:'DM Mono';
+  font-size:0.65rem;
+  letter-spacing:2px;
+  color: var(--accent);
+}
+
+.announce-list { display:flex; flex-direction:column; gap:10px; }
+.ann-item {
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.015);
+  padding: 12px 14px;
+}
+.ann-top {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+}
+.ann-time { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); }
+.ann-tag {
+  flex-shrink:0;
+  border-radius: 100px;
+  padding: 6px 10px;
+  font-family:'DM Mono';
+  font-size:0.62rem;
+  letter-spacing:2px;
+  border:1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  color: rgba(255,255,255,0.65);
+  text-transform: uppercase;
+}
+.ann-tag.lastminute { border-color: rgba(0,229,180,0.25); color: var(--accent); background: rgba(0,229,180,0.06); }
+.ann-tag.schedule { border-color: rgba(43,43,255,0.25); color: rgba(43,43,255,0.9); background: rgba(43,43,255,0.06); }
+.ann-title { font-family:'Syne'; font-weight:700; font-size:0.98rem; margin-top:6px; margin-bottom:6px; }
+.ann-body { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: rgba(255,255,255,0.48); line-height:1.7; }
+
+.right-stack { display:flex; flex-direction:column; gap:10px; }
+.right-row {
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.015);
+  padding: 12px 14px;
+}
+.right-k { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.right-v { font-family:'Syne'; font-weight:700; font-size:1rem; color: var(--fg); }
+
+.small {
+  font-family:'DM Mono';
+  font-size:0.68rem;
+  letter-spacing:1px;
+  color: rgba(255,255,255,0.45);
+  line-height:1.7;
+}
+
+footer { border-top:1px solid var(--line); padding:40px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; max-width:1200px; margin:0 auto; }
+.footer-brand { display:flex; align-items:center; gap:10px; }
+.footer-brand svg { width:20px; height:20px; color:var(--accent); }
+.footer-brand span { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+.footer-copy { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+/* ANIMATIONS */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+
+  <div class="nav-right">
+    <a class="nav-profile" href="guestprofile.html" aria-label="Go to profile">
+      <span class="nav-profile-dot" aria-hidden="true"></span>
+      <span id="nav-profile-text">PROFILE</span>
+    </a>
+
+    <span class="nav-user" id="nav-user">—</span>
+    <button class="nav-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Sidebar Menu">
+    <div class="sb-brand">
+      <div class="sb-brand-dot" aria-hidden="true"></div>
+      <div class="sb-brand-title">Menu</div>
+    </div>
+
+     <div class="sb-section">
+      <button class="sb-link" type="button" onclick="window.location.href='guest.html'">
+        <span class="sb-icon" aria-hidden="true">⌂</span>
+        <span class="sb-text">Guest Portal</span>
+      </button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guest-graduate-status.html'">
+  <span class="sb-icon" aria-hidden="true">✓</span>
+  <span class="sb-text">Graduate Status</span>
+</button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guestvote.html'">
+  <span class="sb-icon" aria-hidden="true">🗳️</span>
+  <span class="sb-text">Graduate Voting</span>
+</button>
+
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-hall-live.html'">
+        <span class="sb-icon" aria-hidden="true">◷</span>
+        <span class="sb-text">Hall Live</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-award-gallery.html'">
+        <span class="sb-icon" aria-hidden="true">★</span>
+        <span class="sb-text">Award Gallery</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-live-announcement.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+        <span class="sb-icon" aria-hidden="true">!</span>
+        <span class="sb-text">Announcements</span>
+      </button>
+
+            <button class="sb-link" type="button" onclick="window.location.href='guestprofile.html'">
+        <span class="sb-icon" aria-hidden="true">☺</span>
+        <span class="sb-text">My Profile</span>
+      </button> 
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-label">Logged in as</div>
+      <div class="sb-footer-name" id="sb-footer-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="page-header">
+      <div class="page-header-eyebrow">Latest Updates</div>
+      <h1 class="page-header-title">Live <span>Announcements</span></h1>
+        <p class="page-header-sub">
+        Guests can check the latest event information — including <b>last-minute updates</b>.
+      </p>
+    </header>
+
+    <section class="section">
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">
+            <div class="t">Announcement Feed</div>
+            <div class="pill">Now</div>
+          </div>
+
+          <div class="announce-list" id="announce-list"></div>
+        </div>
+
+        <div class="right-stack">
+          <div class="right-row">
+            <div class="right-k">Last Updated</div>
+            <div class="right-v" id="last-updated">—</div>
+            <div class="small" style="margin-top:8px;" id="refresh-note">Auto refresh setiap 10 saat (UI demo).</div>
+          </div>
+
+          <div class="right-row">
+            <div class="right-k">Last Minute Alerts</div>
+            <div class="right-v" id="lm-count">0</div>
+            <div class="small" style="margin-top:8px;">
+              Latest alerts will be displayed at the top.
+            </div>
+          </div>
+
+          <div class="right-row">
+            <div class="right-k">Tip For Guests</div>
+            <div class="small" style="color:rgba(255,255,255,0.48)" id="tip">
+              Check this feed for schedule changes, near-gate call updates, and safety instructions.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+        </svg>
+        <span>SMARTCONVO</span>
+      </div>
+      <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+function readSmartconvoUser() {
+  try {
+    const raw = localStorage.getItem('smartconvo_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+const storedUserName = localStorage.getItem('userName');
+const smartconvoUser = readSmartconvoUser();
+const userName = storedUserName || smartconvoUser?.name || smartconvoUser?.email || 'Guest';
+
+document.getElementById('nav-user').textContent = userName;
+document.getElementById('sb-footer-name').textContent = userName;
+
+// Demo announcements (UI placeholder)
+let announcements = [
+  {
+    tag: 'LAST MINUTE',
+    tagClass: 'lastminute',
+    time: 'Just now',
+    title: 'Main Door Opens 15 Minutes Early',
+    body: 'Guests are asked to wait in the lobby area. Entry slots will start 15 minutes earlier than scheduled.'
+  },
+  {
+    tag: 'SCHEDULE',
+    tagClass: 'schedule',
+    time: '10:05',
+    title: 'Sesi Pemanggilan Bermula',
+    body: 'Pemanggilan graduan mengikut status (duduk / beratur / naik pentas). Sila semak jadual terkini di tab Graduate Status.'
+  },
+  {
+    tag: 'SCHEDULE',
+    tagClass: 'schedule',
+    time: '09:45',
+    title: 'Info Keselamatan',
+    body: 'Sila pastikan telefon pada mod senyap. Jangan halang laluan kecemasan. Gunakan laluan kiri/kanan yang ditetapkan.'
+  }
+];
+
+function formatNow() {
+  return new Date().toLocaleString();
+}
+
+function renderAnnouncements() {
+  const list = document.getElementById('announce-list');
+  const lmCountEl = document.getElementById('lm-count');
+
+  // Put LAST MINUTE first
+  const sorted = [...announcements].sort((a,b) => {
+    const ap = a.tag === 'LAST MINUTE' ? 1 : 0;
+    const bp = b.tag === 'LAST MINUTE' ? 1 : 0;
+    return bp - ap;
+  });
+
+  const lmCount = sorted.filter(x => x.tag === 'LAST MINUTE').length;
+  lmCountEl.textContent = lmCount;
+
+  list.innerHTML = sorted.map(a => {
+    return `
+      <div class="ann-item">
+        <div class="ann-top">
+          <div class="ann-time">${a.time}</div>
+          <div class="ann-tag ${a.tagClass}">${a.tag}</div>
+        </div>
+        <div class="ann-title">${a.title}</div>
+        <div class="ann-body">${a.body}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('last-updated').textContent = formatNow();
+}
+
+renderAnnouncements();
+
+// Auto refresh demo
+setInterval(() => {
+  // Demo: update “Just now” time label
+  announcements = announcements.map((a) => {
+    if (a.tag === 'LAST MINUTE') return { ...a, time: 'Just now' };
+    return a;
+  });
+  renderAnnouncements();
+}, 10000);
+</script>
+</body>
+</html>
+

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Guest Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.6);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  overflow: auto;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
+}
+.left {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 64px;
+  border-right: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  width: 48%;
+  flex-shrink: 0;
+}
+@media (min-width: 1024px) { .left { display: flex; } }
+.diagonal-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #2B2BFF 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+.glow-orb {
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,229,180,0.12) 0%, transparent 70%);
+  bottom: -100px; left: -100px;
+  pointer-events: none;
+  animation: orb-pulse 6s ease-in-out infinite;
+}
+@keyframes orb-pulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+.left-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown 0.8s ease both;
+}
+.brand-icon { width: 32px; height: 32px; color: var(--accent); }
+.brand-name { font-family: 'Bebas Neue'; font-size: 1.5rem; letter-spacing: 6px; }
+.left-body { position: relative; z-index: 1; }
+.left-heading {
+  font-family: 'Bebas Neue';
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.left-heading span { color: var(--accent); }
+.left-sub {
+  font-size: 0.95rem;
+  color: var(--dim);
+  line-height: 1.8;
+  max-width: 360px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+.left-stats {
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.stat-val {
+  font-family: 'Bebas Neue';
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
+}
+.ticker {
+  position: relative; z-index: 1;
+  margin-top: 32px;
+  overflow: hidden;
+  animation: fadeUp 0.8s 0.5s ease both;
+}
+.ticker-inner {
+  display: flex;
+  gap: 32px;
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  animation: ticker-scroll 20s linear infinite;
+  white-space: nowrap;
+}
+@keyframes ticker-scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-dot { color: var(--accent); }
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 32px;
+  overflow-y: auto;
+  position: relative;
+}
+.right::before {
+  content:'';
+  position:absolute;
+  top:0; right:0; width:60%; height:60%;
+  background: radial-gradient(ellipse at top right, rgba(43,43,255,0.07), transparent 70%);
+  pointer-events:none;
+}
+.right-inner { max-width: 460px; width: 100%; margin: 0 auto; position:relative; z-index:1; }
+.right-header { margin-bottom: 24px; animation: fadeUp 0.7s 0.1s ease both; }
+.right-title { font-family: 'Bebas Neue'; font-size: clamp(2.8rem, 6vw, 4rem); letter-spacing: 4px; margin-bottom: 8px; }
+.right-sub { font-size: 0.9rem; color: var(--dim); }
+.form-wrap { animation: fadeUp 0.5s ease both; }
+.back-link {
+  background:none; border:none; padding:0;
+  color: rgba(255,255,255,0.45);
+  font-family: 'DM Mono'; font-size: 0.72rem; letter-spacing: 2px;
+  cursor: pointer;
+  display:flex; align-items:center; gap:8px;
+  transition: color 0.3s;
+  margin-bottom: 18px;
+}
+.back-link:hover { color: var(--accent); }
+.back-link svg { width: 15px; height: 15px; stroke: currentColor; }
+.role-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,229,180,0.08); border: 1px solid rgba(0,229,180,0.2);
+  border-radius: 100px; padding: 6px 14px;
+  font-family: 'DM Mono'; font-size: 0.68rem; letter-spacing: 2px;
+  color: var(--accent); margin-bottom: 18px;
+}
+.role-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1.5s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.form-group { margin-bottom: 20px; }
+.form-label { display:block; font-family: 'Bebas Neue'; font-size: 0.82rem; letter-spacing: 3px; color: rgba(255,255,255,0.7); margin-bottom: 10px; }
+.input-wrap { position: relative; }
+.input-icon { position:absolute; left:14px; top:50%; transform: translateY(-50%); width:16px; height:16px; stroke: rgba(255,255,255,0.3); }
+.form-input {
+  width:100%;
+  background: rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+  padding: 14px 16px 14px 42px;
+  color: var(--fg);
+  font-family: 'DM Mono';
+  font-size: 0.83rem;
+  letter-spacing: 1px;
+  outline:none;
+  transition: all 0.3s;
+}
+.form-input::placeholder { color: rgba(255,255,255,0.25); }
+.form-input:focus { border-color: var(--accent); background: rgba(0,229,180,0.04); }
+.error-text { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color: rgba(255,120,120,0.95); margin-top:8px; display:none; }
+.error-text.show { display:block; }
+.submit-btn {
+  width:100%;
+  background: var(--accent);
+  color:#06080b;
+  border:none;
+  border-radius:10px;
+  padding: 16px;
+  font-family:'Bebas Neue';
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  cursor:pointer;
+  margin-top: 8px;
+  transition: all 0.3s;
+  position: relative;
+  overflow:hidden;
+}
+.submit-btn::after {
+  content:'';
+  position:absolute; top:50%; left:50%; width:0; height:0;
+  background: rgba(255,255,255,0.2);
+  border-radius:50%;
+  transform: translate(-50%,-50%);
+  transition: width 0.4s, height 0.4s;
+}
+.submit-btn:hover { background:#fff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,180,0.3); }
+.submit-btn:active::after { width: 300px; height: 300px; }
+.submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.link-row { display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-top: 18px; }
+.text-link {
+  color: rgba(255,255,255,0.45);
+  font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px;
+  text-decoration:none;
+  transition: color 0.3s;
+}
+.text-link:hover { color: var(--accent); }
+.helper-note { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color: rgba(255,255,255,0.35); text-align:center; margin-top: 18px; }
+.hidden { display:none !important; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="diagonal-grid"></div>
+    <div class="glow-orb"></div>
+
+    <div class="left-brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+      </svg>
+      <span class="brand-name">SMARTCONVO</span>
+    </div>
+
+    <div class="left-body">
+      <h2 class="left-heading">Dean's<br><span>Award</span><br>Ceremony</h2>
+      <p class="left-sub">Celebrating excellence in TVETMARA Lumut.</p>
+
+      <div class="left-stats">
+        <div class="stat-box"><div class="stat-val">2026</div><div class="stat-lbl">Award Year</div></div>
+        <div class="stat-box"><div class="stat-val">12+</div><div class="stat-lbl">Categories</div></div>
+        <div class="stat-box"><div class="stat-val">50+</div><div class="stat-lbl">Nominees</div></div>
+        <div class="stat-box"><div class="stat-val">3</div><div class="stat-lbl">Tracks</div></div>
+      </div>
+
+      <div class="ticker">
+        <div class="ticker-inner">
+          <span>Anugerah Pelajar Terbaik</span><span class="ticker-dot">✦</span>
+          <span>Anugerah Dekan</span><span class="ticker-dot">✦</span>
+          <span>Anugerah Bukan Akademik</span><span class="ticker-dot">✦</span>
+          <span>Anugerah Pelajar Terbaik Kos</span><span class="ticker-dot">✦</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="right-inner">
+      <div class="right-header">
+        <h1 class="right-title">Guest Registration</h1>
+        <p class="right-sub">Create your guest account for SMARTCONVO access</p>
+      </div>
+
+      <div class="form-wrap">
+        <a class="back-link" href="login-guest.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to Login
+        </a>
+
+        <div class="role-badge">
+          <div class="role-badge-dot"></div>
+          <span>GUEST</span>
+        </div>
+
+        <form id="registerForm" novalidate>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input class="form-input" type="text" id="name" name="name" placeholder="Enter your full name" autocomplete="name" required>
+            </div>
+            <div class="error-text" id="nameErr">Name is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input class="form-input" type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email" required>
+            </div>
+            <div class="error-text" id="emailErr">Please enter a valid email.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input class="form-input" type="password" id="password" name="password" placeholder="Create a password" autocomplete="new-password" required>
+            </div>
+            <div class="error-text" id="passErr">Password is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input class="form-input" type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" autocomplete="new-password" required>
+            </div>
+            <div class="error-text" id="confirmErr">Passwords must match.</div>
+          </div>
+
+          <button class="submit-btn" type="submit" id="registerBtn">Register</button>
+
+          <p class="helper-note">This is a UI demo. After validation, you will be redirected to login.</p>
+
+          <div class="link-row">
+            <a class="text-link" href="forgotpasswordg.html">Forgot Password?</a>
+            <a class="text-link" href="login-guest.html">Already have an account?</a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+(function(){
+  const form = document.getElementById('registerForm');
+  const nameEl = document.getElementById('name');
+  const emailEl = document.getElementById('email');
+  const passEl = document.getElementById('password');
+  const confirmEl = document.getElementById('confirmPassword');
+
+  const nameErr = document.getElementById('nameErr');
+  const emailErr = document.getElementById('emailErr');
+  const passErr = document.getElementById('passErr');
+  const confirmErr = document.getElementById('confirmErr');
+
+  const btn = document.getElementById('registerBtn');
+
+  function show(el){ el.classList.add('show'); }
+  function hide(el){ el.classList.remove('show'); }
+
+  function isEmail(v){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim();
+    const pass = passEl.value;
+    const confirm = confirmEl.value;
+
+    hide(nameErr); hide(emailErr); hide(passErr); hide(confirmErr);
+
+    let ok = true;
+
+    if (!name) { show(nameErr); ok = false; }
+    if (!isEmail(email)) { show(emailErr); ok = false; }
+    if (!pass) { show(passErr); ok = false; }
+    if (!confirm || confirm !== pass) { show(confirmErr); ok = false; }
+
+    if (!ok) return;
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = 'Creating...';
+
+    setTimeout(() => {
+      try {
+        localStorage.setItem('smartconvo_user', JSON.stringify({
+          role: 'guest',
+          name,
+          email,
+          loginTime: new Date().toISOString()
+        }));
+      } catch(_ ){}
+      window.location.href = 'login-guest.html';
+    }, 900);
+  });
+})();
+</script>
+</body>
+</html>
+

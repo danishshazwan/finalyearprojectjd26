@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMARTCONVO — Student Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --accent:#00e5b4;
+      --accent2:#2B2BFF;
+      --gold:#f0c040;
+      --bg:#06080b;
+      --fg:#e8eaf0;
+      --dim:rgba(255,255,255,0.55);
+      --line:rgba(255,255,255,0.08);
+      --card:rgba(255,255,255,0.03);
+    }
+    html{ scroll-behavior:smooth; }
+    body{
+      background:var(--bg);
+      color:var(--fg);
+      font-family:'Syne', sans-serif;
+      min-height:100vh;
+      overflow-y:auto;
+    }
+
+    body::before{
+      content:''; position:fixed; inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:0.025; pointer-events:none; z-index:9999;
+    }
+
+    nav{
+      position:sticky; top:0; z-index:100;
+      background:rgba(6,8,11,0.85);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--line);
+      padding:0 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      height:64px;
+      animation:fadeDown 0.6s ease both;
+    }
+    .nav-brand{ display:flex; align-items:center; gap:10px; }
+    .nav-brand svg{ width:24px; height:24px; color:var(--accent); }
+    .nav-brand span{ font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+    .nav-right{ display:flex; align-items:center; gap:12px; }
+    .nav-badge{ background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.25); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:var(--accent); }
+    .nav-user{ font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color:rgba(255,255,255,0.55); display:none; }
+    @media(min-width:768px){ .nav-user{display:block} }
+    .nav-logout{ background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+    .nav-logout:hover{ border-color:var(--accent); color:var(--accent); }
+
+    /* Layout */
+    .layout{ display:flex; min-height:calc(100vh - 64px); }
+    .sidebar{
+      width:260px;
+      flex-shrink:0;
+      border-right:1px solid var(--line);
+      background:rgba(255,255,255,0.01);
+      padding:28px 18px;
+      position:sticky;
+      top:64px;
+      height:calc(100vh - 64px);
+      overflow-y:auto;
+    }
+    .main{ flex:1; min-height:100vh; overflow-y:auto; }
+
+    .sb-brand{ display:flex; align-items:center; gap:12px; margin-bottom:24px; padding:0 8px; }
+    .sb-brand-dot{ width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(0,229,180,0.08); }
+    .sb-brand-title{ font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color:rgba(255,255,255,0.65); }
+
+    .sb-section{ display:flex; flex-direction:column; gap:10px; padding:0 8px; }
+    .sb-link{
+      width:100%;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      color:var(--fg);
+      border-radius:12px;
+      padding:12px 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      transition:all 0.3s;
+    }
+    .sb-link:hover{ border-color:rgba(0,229,180,0.35); background:rgba(0,229,180,0.06); transform:translateX(4px); }
+    .sb-icon{ width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,180,0.08); color:var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+    .sb-text{ font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color:rgba(255,255,255,0.72); }
+
+    .sb-footer{ margin-top:28px; border-top:1px solid var(--line); padding-top:18px; padding-left:8px; padding-right:8px; }
+    .sb-footer-label{ font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color:rgba(255,255,255,0.35); margin-bottom:8px; }
+    .sb-footer-name{ font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color:var(--accent); }
+
+    @media(max-width:900px){
+      .layout{ flex-direction:column; }
+      .sidebar{ width:100%; position:relative; top:auto; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+      .main{ min-height:auto; }
+    }
+
+    /* Profile page */
+    .profile-page{ padding:40px 32px 80px; max-width:980px; margin:0 auto; }
+    .page-title{ font-family:'Bebas Neue'; font-size:clamp(2rem,4vw,3rem); letter-spacing:3px; margin-bottom:8px; animation:fadeUp 0.5s ease both; }
+    .page-title span{ color:var(--accent); }
+    .page-sub{ font-size:0.9rem; color:var(--dim); margin-bottom:28px; animation:fadeUp 0.5s 0.1s ease both; line-height:1.7; }
+
+    .hero-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:28px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:20px;
+      animation:fadeUp 0.5s 0.2s ease both;
+    }
+
+    .id-block{ display:flex; gap:14px; align-items:flex-start; }
+    .avatar{
+      width:64px; height:64px; border-radius:20px;
+      background:rgba(0,229,180,0.08);
+      border:1px solid rgba(0,229,180,0.25);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem;
+      color:var(--accent);
+      box-shadow:0 12px 40px rgba(0,229,180,0.08);
+      flex-shrink:0;
+    }
+
+    .id-meta{ min-width:0; }
+    .id-name{ font-family:'Syne'; font-weight:700; font-size:1.15rem; margin-bottom:6px; }
+    .id-line{ font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color:rgba(255,255,255,0.45); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .quick-actions{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; }
+
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.02);
+      color:rgba(255,255,255,0.72);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-family:'DM Mono';
+      letter-spacing:2px;
+      font-size:0.68rem;
+      transition:all 0.3s;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+    .btn:hover{ border-color:rgba(0,229,180,0.35); background:rgba(0,229,180,0.06); transform:translateY(-1px); color:var(--fg); }
+
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+    @media(max-width:700px){ .grid-2{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:18px;
+      animation:fadeUp 0.5s ease both;
+    }
+
+    .card-title{ font-family:'Bebas Neue'; letter-spacing:3px; font-size:1.1rem; margin-bottom:10px; }
+    .kv{ display:grid; grid-template-columns:140px 1fr; gap:10px 12px; }
+    @media(max-width:480px){ .kv{ grid-template-columns:1fr; } }
+
+    .k{ font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:rgba(255,255,255,0.35); text-transform:uppercase; }
+    .v{ font-family:'DM Mono'; font-size:0.78rem; letter-spacing:1px; color:rgba(255,255,255,0.78); word-break:break-word; }
+
+    .progress-wrap{ margin-top:12px; }
+    .progress-label{ font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:rgba(255,255,255,0.35); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .progress-bar-wrap{ height:6px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; }
+    .progress-bar{ height:100%; background:var(--accent); border-radius:999px; width:0; transition:width 1s ease; }
+
+    footer{
+      border-top:1px solid var(--line);
+      padding:40px 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:16px;
+      background:transparent;
+    }
+    .footer-brand{ display:flex; align-items:center; gap:10px; }
+    .footer-brand svg{ width:20px; height:20px; color:var(--accent); }
+    .footer-brand span{ font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+    .footer-copy{ font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+    /* Toast */
+    .toast{
+      position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.3);
+      border-radius:10px; padding:14px 24px;
+      font-family:'DM Mono'; font-size:0.75rem; letter-spacing:2px; color:var(--accent);
+      opacity:0; transition:all 0.4s; pointer-events:none; z-index:1000; white-space:nowrap;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    @keyframes fadeUp{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown{ from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+      </svg>
+      <span>SMARTCONVO</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge">STUDENT</span>
+      <span class="nav-user" id="nav-user">—</span>
+      <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Student Sidebar">
+      <div class="sb-brand">
+        <div class="sb-brand-dot" aria-hidden="true"></div>
+        <div class="sb-brand-title">Menu</div>
+      </div>
+
+       <div class="sb-section">
+<button class="sb-link" type="button" onclick="window.location.href='student.html'">
+        <span class="sb-icon" aria-hidden="true">🏛️</span>
+        <span class="sb-text">Student Portal</span>
+      </button>
+
+      <button class="sb-link" type="button" data-active="true" onclick="window.location.href='studentprofile.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+        <span class="sb-icon" aria-hidden="true">👤</span>
+        <span class="sb-text">Profile Student</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-updatedata.html'">
+        <span class="sb-icon" aria-hidden="true">✎</span>
+        <span class="sb-text">Update Data</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-verifyface.html'">
+        <span class="sb-icon" aria-hidden="true">🧠</span>
+        <span class="sb-text">Verify Face</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-uploadachievement.html'">
+        <span class="sb-icon" aria-hidden="true">🏆</span>
+        <span class="sb-text">Upload Achievement</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-queue-status.html'">
+        <span class="sb-icon" aria-hidden="true">#</span>
+        <span class="sb-text">Queue Number</span>
+      </button>
+      </div>
+
+      <div class="sb-footer">
+        <div class="sb-footer-label">Logged in as</div>
+        <div class="sb-footer-name" id="sb-footer-name">—</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="profile-page" aria-label="Student Profile">
+        <h1 class="page-title">Student <span>Profile</span></h1>
+        <p class="page-sub">View and manage your student details for SMARTCONVO convocation.</p>
+
+        <div class="hero-card">
+          <div class="id-block">
+            <div class="avatar" aria-hidden="true">🎓</div>
+            <div class="id-meta">
+              <div class="id-name" id="student-name">—</div>
+              <div class="id-line"><span style="color:var(--accent)">Student ID:</span> <span id="student-id">—</span></div>
+              <div class="id-line"><span style="color:var(--accent)">Email:</span> <span id="student-email">—</span></div>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <a class="btn" href="student-updatedata.html" title="Update your data">
+              <span aria-hidden="true">✎</span>
+              <span>Update Data</span>
+            </a>
+            <a class="btn" href="student-verifyface.html" title="Run AI verification">
+              <span aria-hidden="true">🧠</span>
+              <span>AI Verification</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Identity & Status</div>
+            <div class="kv">
+              <div class="k">Verification</div>
+              <div class="v" id="face-status">Pending</div>
+
+              <div class="k">Queue</div>
+              <div class="v" id="queue-no">—</div>
+
+              <div class="k">Camera Scan</div>
+              <div class="v" id="camera-status">Not Started</div>
+
+              <div class="k">Attendance</div>
+              <div class="v" id="attendance-status">Not Checked</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Profile Completion</div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span id="completion-label">—% Complete</span>
+                <span style="font-family:'Bebas Neue';letter-spacing:2px;color:var(--accent)" id="completion-val">—</span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar" id="completion-bar"></div>
+              </div>
+              <div style="margin-top:10px; font-family:'DM Mono'; font-size:0.72rem; letter-spacing:1px; color:rgba(255,255,255,0.4); line-height:1.6;">
+                Keep your details updated to receive smoother verification and check-in.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="card-title">University Events</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <span class="status-pill status-pending" style="background:rgba(0,229,180,0.1);border:1px solid rgba(0,229,180,0.3);color:var(--accent);padding:6px 14px;">🎓 Robe Collection</span>
+            <span class="status-pill status-review" style="background:rgba(43,43,255,0.15);border:1px solid rgba(43,43,255,0.4);color:#7b8fff;padding:6px 14px;">🎤 Rehearsal</span>
+            <span class="status-pill status-pending" style="background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);color:var(--gold);padding:6px 14px;">🧾 Queue Reporting</span>
+            <span class="status-pill status-approved" style="background:rgba(0,229,180,0.1);border:1px solid rgba(0,229,180,0.3);color:var(--accent);padding:6px 14px;">🏛️ Main Ceremony</span>
+          </div>
+          <div style="margin-top:12px; font-family:'DM Mono'; font-size:0.78rem; letter-spacing:1px; color:rgba(255,255,255,0.5); line-height:1.7;">
+            Dates and times are shown in the student dashboard and queue pages.
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+          </svg>
+          <span>SMARTCONVO</span>
+        </div>
+        <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+      </footer>
+
+      <div class="toast" id="toast"></div>
+    </main>
+  </div>
+
+  <script>
+    const userName = localStorage.getItem('userName') || 'Student';
+    const studentId = localStorage.getItem('studentId') || 'N/A';
+    const userEmail = localStorage.getItem('userEmail') || '';
+
+    document.getElementById('nav-user').textContent = userName;
+    document.getElementById('student-name').textContent = userName;
+    document.getElementById('student-id').textContent = studentId;
+    document.getElementById('student-email').textContent = userEmail || '—';
+
+    // Optional smartconvoStorage usage (if present)
+    (function initFromStorage(){
+      try{
+        const st = window.smartconvoStorage?.getState?.();
+        const queueItems = st?.queue?.queueItems || [];
+        const me = queueItems.find(x => String(x.studentId) === String(studentId) || String(x.id) === String(studentId));
+        if(me?.queueNo) document.getElementById('queue-no').textContent = me.queueNo;
+
+        // Face/camera/attendance are UI placeholders if real backend isn't wired
+        const base = {
+          face: me?.faceStatus || 'Pending',
+          camera: me?.step === 'seated' ? 'Not Started' : 'In Progress',
+          attendance: me?.step === 'onstage' || me?.step === 'finished' ? 'Checked' : 'Not Checked'
+        };
+        document.getElementById('face-status').textContent = base.face;
+        document.getElementById('camera-status').textContent = base.camera;
+        document.getElementById('attendance-status').textContent = base.attendance;
+
+        // completion heuristic (purely front-end)
+        const completion = (String(userEmail).trim() ? 30 : 10) + (String(studentId).trim() ? 20 : 0) + (me ? 40 : 20);
+        const completionClamped = Math.max(10, Math.min(100, completion));
+        document.getElementById('completion-label').textContent = completionClamped + '% Complete';
+        document.getElementById('completion-val').textContent = completionClamped + '%';
+        document.getElementById('completion-bar').style.width = completionClamped + '%';
+      }catch(e){}
+    })();
+
+    function logout(){ localStorage.clear(); window.location.href = 'index.html'; }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      if(!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
+

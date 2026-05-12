@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — AI Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   BASE & VARIABLES
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --accent-glow: rgba(0, 229, 180, 0.4);
+  --red: #ff4d6d;
+  --red-glow: rgba(255, 77, 109, 0.4);
+  --gold: #f0c040;
+  --blue: #4d7fff;
+  --bg-dark: #030406;
+  --bg-panel: rgba(10, 14, 23, 0.65);
+  --fg: #f4f6fa;
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(255, 255, 255, 0.15);
+  --sidebar-w: 260px;
+  --sidebar-w-collapsed: 80px;
+  --transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html { scroll-behavior: smooth; font-size: 14px; }
+body { 
+  background: var(--bg-dark); color: var(--fg); font-family: 'Syne', sans-serif; 
+  min-height: 100vh; display: flex; overflow-x: hidden;
+}
+
+/* Background Grid & Noise */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -2;
+  background-image: 
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px; opacity: 0.2;
+}
+body::after {
+  content:''; position:fixed; inset:0; z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.03; pointer-events: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ==========================================================================
+   GLASSMORPHISM PANELS (ENTERPRISE VIBE)
+   ========================================================================== */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+.glass-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+/* ==========================================================================
+   SIDEBAR
+   ========================================================================== */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0; height: 100vh;
+  background: rgba(6, 8, 12, 0.8);
+  border-right: 1px solid var(--border);
+  position: sticky; top: 0; left: 0; z-index: 100;
+  display: flex; flex-direction: column; transition: var(--transition);
+  backdrop-filter: blur(20px);
+}
+.sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+
+.sb-header { 
+  height: 80px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; border-bottom: 1px solid var(--border);
+}
+.sb-brand { display: flex; align-items: center; gap: 12px; overflow: hidden; white-space: nowrap; }
+.sb-brand svg { width: 24px; height: 24px; color: var(--accent); filter: drop-shadow(0 0 8px var(--accent-glow)); flex-shrink: 0; }
+.sb-brand-text { display: flex; flex-direction: column; }
+.sb-brand-title { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 4px; line-height: 1; }
+.sb-brand-sub { font-family: 'DM Mono'; font-size: 0.55rem; letter-spacing: 2px; color: var(--accent); }
+
+.toggle-btn {
+  background: none; border: none; color: var(--text-muted); cursor: pointer; transition: 0.3s;
+}
+.toggle-btn:hover { color: var(--fg); }
+.sidebar.collapsed .sb-brand-text, .sidebar.collapsed .sb-section-lbl, .sidebar.collapsed .sb-item-text, .sidebar.collapsed .badge { display: none; }
+.sidebar.collapsed .sb-header { justify-content: center; padding: 0; }
+.sidebar.collapsed .toggle-btn { display: none; }
+
+.sb-nav { flex: 1; padding: 20px 12px; overflow-y: auto; overflow-x: hidden; }
+.sb-section-lbl { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 3px; color: var(--text-muted); padding: 10px 12px; margin-top: 10px; text-transform: uppercase; }
+.sb-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+  border-radius: 10px; cursor: pointer; border: 1px solid transparent;
+  color: var(--text-muted); font-family: 'Syne'; font-weight: 600; font-size: 0.85rem;
+  transition: var(--transition); text-decoration: none; position: relative; margin-bottom: 4px;
+}
+.sb-item svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.sb-item:hover { background: rgba(255,255,255,0.03); color: var(--fg); border-color: var(--border); }
+.sb-item.active { 
+  background: rgba(0, 229, 180, 0.05); color: var(--accent); 
+  border-color: rgba(0, 229, 180, 0.2); box-shadow: inset 0 0 20px rgba(0,229,180,0.05);
+}
+.sb-item.active::before {
+  content: ''; position: absolute; left: -12px; top: 20%; bottom: 20%; width: 3px;
+  background: var(--accent); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--accent);
+}
+.badge { margin-left: auto; background: var(--red); color: #fff; font-family: 'DM Mono'; font-size: 0.6rem; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+
+.sb-footer { padding: 20px; border-top: 1px solid var(--border); }
+.sys-status { display: flex; align-items: center; gap: 10px; font-family: 'DM Mono'; font-size: 0.65rem; color: var(--text-muted); }
+.status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+.sidebar.collapsed .sys-status span { display: none; }
+
+/* ==========================================================================
+   MAIN CONTENT & TOPBAR
+   ========================================================================== */
+.main { flex: 1; display: flex; flex-direction: column; transition: var(--transition); min-width: 0; }
+
+.topbar {
+  height: 80px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; position: sticky; top: 0; z-index: 90;
+  background: linear-gradient(180deg, rgba(3,4,6,0.9) 0%, rgba(3,4,6,0) 100%);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.page-title { display: flex; align-items: center; gap: 16px; }
+.page-title h1 { font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 3px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.live-badge { 
+  border: 1px solid var(--red); color: var(--red); background: rgba(255,77,109,0.1);
+  padding: 4px 10px; border-radius: 4px; font-family: 'DM Mono'; font-size: 0.7rem; font-weight: bold;
+  display: flex; align-items: center; gap: 6px; letter-spacing: 1px;
+}
+.live-badge i { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulseRed 1s infinite; }
+
+.top-actions { display: flex; align-items: center; gap: 24px; }
+.time-display { font-family: 'DM Mono'; font-size: 1.1rem; color: var(--accent); font-weight: 500; text-shadow: 0 0 10px var(--accent-glow); }
+.action-icon { background: var(--bg-panel); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; position: relative; }
+.action-icon:hover { border-color: var(--accent); color: var(--accent); }
+.action-icon .ping { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: var(--gold); border-radius: 50%; border: 2px solid var(--bg-dark); }
+
+.content-area { padding: 0 40px 40px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ==========================================================================
+   DASHBOARD GRID & CARDS
+   ========================================================================== */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.kpi-card { padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+.kpi-icon { position: absolute; top: 24px; right: 24px; color: var(--border-highlight); width: 40px; height: 40px; }
+.kpi-card:hover .kpi-icon { color: var(--fg); opacity: 0.5; }
+.kpi-val { font-family: 'Bebas Neue'; font-size: 3.5rem; line-height: 1; letter-spacing: 2px; margin-top: 10px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.kpi-val.green { color: var(--accent); }
+.kpi-val.blue { color: var(--blue); }
+.kpi-val.gold { color: var(--gold); }
+.kpi-val.red { color: var(--red); }
+.kpi-lbl { font-family: 'DM Mono'; font-size: 0.75rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 8px; }
+.kpi-trend { font-family: 'DM Mono'; font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 16px; width: max-content;}
+.trend-up { background: rgba(0, 229, 180, 0.1); color: var(--accent); border: 1px solid rgba(0,229,180,0.2); }
+
+.main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+@media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* Section Headers */
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.section-title { font-family: 'Syne'; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+.section-title svg { color: var(--accent); width: 18px; }
+
+/* ==========================================================================
+   LIVE FACE VERIFICATION & STAGE MONITOR (THE "WOW" FACTOR)
+   ========================================================================== */
+.stage-monitor { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; min-height: 380px; }
+@media (max-width: 768px) { .stage-monitor { grid-template-columns: 1fr; } }
+
+.camera-feed {
+  background: #000; border-radius: 12px; position: relative; overflow: hidden;
+  border: 1px solid var(--border); box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+  display: flex; align-items: center; justify-content: center;
+}
+.camera-feed img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; filter: grayscale(20%) contrast(120%); }
+
+/* AI Scanning UI Overlay */
+.ai-overlay { position: absolute; inset: 0; pointer-events: none; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.cam-corners::before, .cam-corners::after, .cam-corners span::before, .cam-corners span::after {
+  content: ''; position: absolute; width: 30px; height: 30px; border: 2px solid var(--accent); opacity: 0.8;
+}
+.cam-corners::before { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+.cam-corners::after { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+.cam-corners span::before { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+.cam-corners span::after { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+.face-box {
+  position: absolute; top: 25%; left: 35%; width: 30%; height: 50%;
+  border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(0,229,180,0.3);
+  animation: pulseBox 2s infinite;
+}
+.scan-line {
+  position: absolute; width: 100%; height: 2px; background: var(--accent);
+  box-shadow: 0 0 10px var(--accent); top: 0; left: 0;
+  animation: scanDown 3s linear infinite;
+}
+
+.cam-data { display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; }
+.cam-log { background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: 6px; font-family: 'DM Mono'; font-size: 0.65rem; color: var(--accent); border: 1px solid rgba(0,229,180,0.3); backdrop-filter: blur(4px); }
+.confidence-meter { text-align: right; }
+.conf-val { font-family: 'Bebas Neue'; font-size: 2.5rem; color: var(--accent); line-height: 1; text-shadow: 0 0 10px var(--accent-glow); }
+.conf-lbl { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 2px; color: #fff; }
+
+/* Graduate Info Side */
+.grad-info { padding: 10px 0; display: flex; flex-direction: column; justify-content: center; }
+.grad-status { font-family: 'DM Mono'; font-size: 0.75rem; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.grad-status i { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+.grad-name { font-family: 'Bebas Neue'; font-size: 3rem; letter-spacing: 2px; line-height: 1.1; margin-bottom: 8px; }
+.grad-id { font-family: 'DM Mono'; font-size: 1.2rem; color: var(--text-muted); margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+.grad-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.meta-item { background: rgba(255,255,255,0.02); padding: 16px; border-radius: 10px; border: 1px solid var(--border); }
+.meta-lbl { font-family: 'DM Mono'; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+.meta-val { font-size: 0.95rem; font-weight: 700; color: var(--fg); }
+
+/* ==========================================================================
+   TERMINAL / LIVE AI LOGS
+   ========================================================================== */
+.terminal-card { display: flex; flex-direction: column; height: 100%; }
+.terminal-window {
+  flex: 1; background: #000; border-radius: 8px; border: 1px solid var(--border);
+  padding: 16px; font-family: 'DM Mono'; font-size: 0.7rem; color: var(--text-muted);
+  overflow-y: hidden; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+}
+.terminal-window::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  background: linear-gradient(0deg, #000, transparent); pointer-events: none;
+}
+.log-line { margin-bottom: 8px; line-height: 1.4; display: flex; gap: 10px; opacity: 0; animation: fadeInUp 0.3s forwards; }
+.log-time { color: var(--blue); }
+.log-event { flex: 1; }
+.log-success { color: var(--accent); }
+.log-warn { color: var(--gold); }
+.log-err { color: var(--red); }
+
+/* ==========================================================================
+   QUEUE MANAGEMENT & TABLES
+   ========================================================================== */
+.queue-list { display: flex; flex-direction: column; gap: 12px; }
+.queue-item { 
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+  border-radius: 12px; transition: 0.3s;
+}
+.queue-item:hover { border-color: var(--border-highlight); background: rgba(255,255,255,0.04); }
+.q-left { display: flex; align-items: center; gap: 16px; }
+.q-avatar { width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 1.2rem; color: var(--text-muted); }
+.q-info h4 { font-family: 'Syne'; font-size: 0.95rem; margin-bottom: 4px; }
+.q-info p { font-family: 'DM Mono'; font-size: 0.7rem; color: var(--text-muted); }
+.q-status { font-family: 'DM Mono'; font-size: 0.65rem; padding: 4px 10px; border-radius: 100px; letter-spacing: 1px; font-weight: bold; }
+.st-waiting { background: rgba(240,192,64,0.1); color: var(--gold); border: 1px solid rgba(240,192,64,0.3); }
+.st-robing { background: rgba(77,127,255,0.1); color: var(--blue); border: 1px solid rgba(77,127,255,0.3); }
+.st-ready { background: rgba(0,229,180,0.1); color: var(--accent); border: 1px solid rgba(0,229,180,0.3); box-shadow: 0 0 10px var(--accent-glow); }
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+@keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+@keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255,77,109,0.7); } 70% { box-shadow: 0 0 0 6px rgba(255,77,109,0); } 100% { box-shadow: 0 0 0 0 rgba(255,77,109,0); } }
+@keyframes scanDown { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+@keyframes pulseBox { 0%, 100% { border-color: rgba(0,229,180,0.4); } 50% { border-color: rgba(0,229,180,1); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <div class="sb-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <div class="sb-brand-text">
+        <span class="sb-brand-title">SMARTCONVO</span>
+        <span class="sb-brand-sub">AI COMMAND CENTER</span>
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-lbl">Monitoring</div>
+    <a href="#" class="sb-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span class="sb-item-text">Live Dashboard</span>
+    </a>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2-9 5 18 3-9h6"/></svg>
+      <span class="sb-item-text">Queue Tracker</span>
+    </a>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="sb-item-text">Face Verification</span>
+      <span class="badge">!</span>
+    </a>
+
+    <div class="sb-section-lbl">Management</div>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="sb-item-text">Graduates Data</span>
+    </a>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="sb-item-text">Awards & Voting</span>
+    </a>
+
+    <div class="sb-section-lbl">System</div>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="sb-item-text">Analytics Report</span>
+    </a>
+    <a href="#" class="sb-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="sb-item-text">Settings</span>
+    </a>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sys-status">
+      <div class="status-dot"></div>
+      <span>AI CORE: <strong>ONLINE</strong></span>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title">
+      <h1>SESSION 1: FACULTY OF COMPUTING</h1>
+      <div class="live-badge"><i></i> LIVE ON STAGE</div>
+    </div>
+    <div class="top-actions">
+      <div class="time-display" id="clock">09:42:15 AM</div>
+      <div class="action-icon">
+        <div class="ping"></div>
+        <svg viewBox="0 0 24 24" width="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="action-icon">
+        <svg viewBox="0 0 24 24" width="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    
+    <div class="kpi-grid">
+      <div class="glass-panel kpi-card">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="kpi-lbl">Total Graduates</div>
+        <div class="kpi-val blue">452</div>
+        <div class="kpi-trend trend-up">+12 since last update</div>
+      </div>
+      <div class="glass-panel kpi-card">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="kpi-lbl">Face Verification Match</div>
+        <div class="kpi-val green">98.5%</div>
+        <div class="kpi-trend trend-up">High accuracy maintained</div>
+      </div>
+      <div class="glass-panel kpi-card">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="kpi-lbl">Queue Throughput</div>
+        <div class="kpi-val gold">14<span style="font-size:1.5rem"> /min</span></div>
+        <div class="kpi-trend" style="background:rgba(240,192,64,0.1); color:var(--gold); border:1px solid rgba(240,192,64,0.2)">Optimal flow rate</div>
+      </div>
+      <div class="glass-panel kpi-card">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="kpi-lbl">Active Guests Hall</div>
+        <div class="kpi-val" style="color:#fff">1,024</div>
+        <div class="kpi-trend trend-up">85% Hall Capacity</div>
+      </div>
+    </div>
+
+    <div class="glass-panel" style="padding: 24px;">
+      <div class="section-head">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          AI Stage & Face Recognition Module
+        </div>
+        <div class="sys-status"><div class="status-dot"></div><span style="color:var(--accent)">FEED ACTIVE</span></div>
+      </div>
+      
+      <div class="stage-monitor">
+        <div class="camera-feed">
+          <img src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=1000&auto=format&fit=crop" alt="Live Stage">
+          
+          <div class="ai-overlay">
+            <div class="cam-corners"><span></span></div>
+            <div class="face-box">
+              <div class="scan-line"></div>
+              <span style="position:absolute; bottom:-25px; right:0; font-family:'DM Mono'; font-size:0.6rem; color:var(--accent); background:rgba(0,0,0,0.8); padding:2px 6px;">ID: A21EC1001</span>
+            </div>
+            
+            <div class="cam-data">
+              <div class="cam-log">
+                [SYS] Target acquired<br>
+                [SYS] Running deep matrix compare...<br>
+                <span style="color:#fff">[AI] MATCH CONFIRMED</span>
+              </div>
+              <div class="confidence-meter">
+                <div class="conf-lbl">BIOMETRIC CONFIDENCE</div>
+                <div class="conf-val">99.8%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grad-info">
+          <div class="grad-status"><i></i> Receiving Scroll</div>
+          <div class="grad-name">Ahmad Farhan Bin Rosli</div>
+          <div class="grad-id">Matrix: A21EC1001</div>
+          
+          <div class="grad-meta">
+            <div class="meta-item">
+              <div class="meta-lbl">Degree Program</div>
+              <div class="meta-val">Bachelor of Computer Science (Data Engineering)</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Award Track</div>
+              <div class="meta-val" style="color:var(--gold)">Best Big Data Project</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Queue Pos</div>
+              <div class="meta-val">#142</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Identity Status</div>
+              <div class="meta-val" style="color:var(--accent)">Verified via Facial AI</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="glass-panel" style="padding: 24px;">
+        <div class="section-head">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Live Convocation Queue
+          </div>
+          <a href="#" style="font-family:'DM Mono'; font-size:0.7rem; color:var(--blue); text-decoration:none;">View Full List →</a>
+        </div>
+        
+        <div class="queue-list">
+          <div class="queue-item" style="border-color:var(--accent); background:rgba(0,229,180,0.05)">
+            <div class="q-left">
+              <div class="q-avatar" style="color:var(--accent); border:1px solid var(--accent)">142</div>
+              <div class="q-info">
+                <h4>Ahmad Farhan Bin Rosli</h4>
+                <p>Data Engineering | A21EC1001</p>
+              </div>
+            </div>
+            <div class="q-status st-ready">ON STAGE</div>
+          </div>
+          <div class="queue-item">
+            <div class="q-left">
+              <div class="q-avatar">143</div>
+              <div class="q-info">
+                <h4>Nurul Izzati Binti Othman</h4>
+                <p>Software Engineering | A21EC1042</p>
+              </div>
+            </div>
+            <div class="q-status st-ready">READY (NEXT)</div>
+          </div>
+          <div class="queue-item">
+            <div class="q-left">
+              <div class="q-avatar">144</div>
+              <div class="q-info">
+                <h4>Lim Wei Xiang</h4>
+                <p>Cyber Security | A21CS2017</p>
+              </div>
+            </div>
+            <div class="q-status st-robing">ROBING CHECK</div>
+          </div>
+          <div class="queue-item">
+            <div class="q-left">
+              <div class="q-avatar">145</div>
+              <div class="q-info">
+                <h4>Siti Nabilah Binti Kamarul</h4>
+                <p>Bioinformatics | A21DS3008</p>
+              </div>
+            </div>
+            <div class="q-status st-waiting">FACE SCANNING...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel terminal-card" style="padding: 24px;">
+        <div class="section-head">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            System Event Logs
+          </div>
+        </div>
+        <div class="terminal-window" id="terminal">
+          <div class="log-line"><span class="log-time">[09:40:11]</span><span class="log-event">System initialized.</span></div>
+          <div class="log-line"><span class="log-time">[09:40:15]</span><span class="log-event">Camera module 1 & 2 connected.</span></div>
+          <div class="log-line"><span class="log-time">[09:41:02]</span><span class="log-event log-success">Face matching model loaded. Acc: 99.8%</span></div>
+          <div class="log-line"><span class="log-time">[09:41:45]</span><span class="log-event">Scanning matrix A21CS2017...</span></div>
+          <div class="log-line"><span class="log-time">[09:41:46]</span><span class="log-event log-success">Match verified. Door lock released.</span></div>
+          <div class="log-line"><span class="log-time">[09:42:01]</span><span class="log-event log-warn">Warning: Lighting drop in Hall B.</span></div>
+          <div class="log-line"><span class="log-time">[09:42:10]</span><span class="log-event">Scanning matrix A21EC1001...</span></div>
+          <div class="log-line"><span class="log-time">[09:42:12]</span><span class="log-event log-success">Target on stage. Firing notification payload.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Clock logic
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Sidebar toggle
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  }
+
+  // Simulate Terminal Logs
+  const terminal = document.getElementById('terminal');
+  const dummyLogs = [
+    { text: "Guest QR scanned successfully. Sector D.", type: "log-event" },
+    { text: "Scanning matrix A21DS3008...", type: "log-event" },
+    { text: "Biometric mismatch detected. Retrying...", type: "log-warn" },
+    { text: "Match verified via secondary angle.", type: "log-success" },
+    { text: "Queue advanced. Position #143 to ready area.", type: "log-event" },
+    { text: "Live streaming API payload sent.", type: "log-success" }
+  ];
+
+  let logIndex = 0;
+  setInterval(() => {
+    if(logIndex >= dummyLogs.length) logIndex = 0; // loop for demo
+    
+    const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const log = dummyLogs[logIndex];
+    
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    div.innerHTML = `<span class="log-time">[${time}]</span><span class="log-event ${log.type}">${log.text}</span>`;
+    
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+    
+    // Remove old logs to keep DOM clean
+    if(terminal.childElementCount > 12) {
+      terminal.removeChild(terminal.firstElementChild);
+    }
+    
+    logIndex++;
+  }, 4500);
+</script>
+
+</body>
+</html>

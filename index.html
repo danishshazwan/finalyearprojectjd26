@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMARTCONVO — Login</title>
+<title>SMARTCONVO</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --accent: #00e5b4;
+  --accent2: #2B2BFF;
   --bg: #06080b;
   --fg: #e8eaf0;
   --dim: rgba(255,255,255,0.6);
   --dim2: rgba(255,255,255,0.2);
-  --line: rgba(255,255,255,0.1);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
 }
 
 body {
@@ -23,7 +25,19 @@ body {
   font-family: 'Syne', sans-serif;
   min-height: 100vh;
   display: flex;
-  overflow: hidden;
+  overflow: auto;
+}
+
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
 }
 
 /* ── LEFT COLUMN ── */
@@ -35,7 +49,7 @@ body {
   border-right: 1px solid var(--line);
   position: relative;
   overflow: hidden;
-  width: 50%;
+  width: 48%;
   flex-shrink: 0;
 }
 
@@ -46,9 +60,19 @@ body {
   inset: 0;
   background-image: linear-gradient(45deg, #2B2BFF 1px, transparent 1px);
   background-size: 40px 40px;
-  opacity: 0.1;
+  opacity: 0.07;
   pointer-events: none;
 }
+
+.glow-orb {
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,229,180,0.12) 0%, transparent 70%);
+  bottom: -100px; left: -100px;
+  pointer-events: none;
+  animation: orb-pulse 6s ease-in-out infinite;
+}
+@keyframes orb-pulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
 
 .left-brand {
   display: flex;
@@ -58,28 +82,15 @@ body {
   z-index: 1;
   animation: fadeDown 0.8s ease both;
 }
+.brand-icon { width: 32px; height: 32px; color: var(--accent); }
+.brand-name { font-family: 'Bebas Neue'; font-size: 1.5rem; letter-spacing: 6px; }
 
-.brand-icon {
-  width: 32px; height: 32px;
-  color: var(--accent);
-}
-
-.brand-name {
-  font-family: 'Bebas Neue';
-  font-size: 1.5rem;
-  letter-spacing: 6px;
-  color: var(--fg);
-}
-
-.left-body {
-  position: relative;
-  z-index: 1;
-}
+.left-body { position: relative; z-index: 1; }
 
 .left-heading {
   font-family: 'Bebas Neue';
-  font-size: clamp(3rem, 5vw, 4rem);
-  line-height: 1.05;
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  line-height: 1;
   letter-spacing: 3px;
   margin-bottom: 20px;
   animation: fadeUp 0.8s 0.2s ease both;
@@ -87,51 +98,62 @@ body {
 .left-heading span { color: var(--accent); }
 
 .left-sub {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--dim);
-  line-height: 1.7;
-  max-width: 380px;
+  line-height: 1.8;
+  max-width: 360px;
   margin-bottom: 40px;
   animation: fadeUp 0.8s 0.3s ease both;
 }
 
 .left-stats {
   border-top: 1px solid var(--line);
-  padding-top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   animation: fadeUp 0.8s 0.4s ease both;
 }
 
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.stat-val {
+  font-family: 'Bebas Neue';
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-lbl {
   font-family: 'DM Mono';
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 1px;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
 }
 
-.stat-dot {
-  width: 8px; height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.left-img {
+.ticker {
   position: relative; z-index: 1;
-  animation: fadeUp 0.8s 0.6s ease both;
+  margin-top: 32px;
+  overflow: hidden;
+  animation: fadeUp 0.8s 0.5s ease both;
 }
-.left-img img {
-  width: 100%; height: 120px;
-  object-fit: cover;
-  opacity: 0.25;
-  filter: grayscale(1);
-  border-radius: 8px;
+.ticker-inner {
+  display: flex;
+  gap: 32px;
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  animation: ticker-scroll 20s linear infinite;
+  white-space: nowrap;
 }
+@keyframes ticker-scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-dot { color: var(--accent); }
 
 /* ── RIGHT COLUMN ── */
 .right {
@@ -141,190 +163,215 @@ body {
   justify-content: center;
   padding: 48px 32px;
   overflow-y: auto;
+  position: relative;
 }
 
-.right-inner {
-  max-width: 420px;
-  width: 100%;
-  margin: 0 auto;
+/* subtle right-side gradient */
+.right::before {
+  content:'';
+  position:absolute;
+  top:0; right:0; width:60%; height:60%;
+  background: radial-gradient(ellipse at top right, rgba(43,43,255,0.07), transparent 70%);
+  pointer-events:none;
 }
 
-.right-header {
-  margin-bottom: 48px;
-  animation: fadeUp 0.7s 0.1s ease both;
-}
+.right-inner { max-width: 420px; width: 100%; margin: 0 auto; position:relative; z-index:1; }
 
-.right-title {
-  font-family: 'Bebas Neue';
-  font-size: clamp(2.5rem, 6vw, 3.5rem);
-  letter-spacing: 4px;
-  margin-bottom: 10px;
-}
+.right-header { margin-bottom: 44px; animation: fadeUp 0.7s 0.1s ease both; }
+.right-title { font-family: 'Bebas Neue'; font-size: clamp(2.8rem, 6vw, 4rem); letter-spacing: 4px; margin-bottom: 8px; }
+.right-sub { font-size: 0.9rem; color: var(--dim); }
 
-.right-sub {
-  font-size: 1rem;
-  color: var(--dim);
+/* mobile brand */
+.mobile-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 32px;
+  animation: fadeDown 0.6s ease both;
+}
+@media (min-width: 1024px) { .mobile-brand { display: none; } }
+.mobile-brand svg { width: 24px; height: 24px; color: var(--accent); }
+.mobile-brand span { font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 5px; }
+
+/* Bottom-right quick links */
+.quick-links {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 999;
+}
+.quick-link {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--fg);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
+}
+.quick-link:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  background: rgba(0,229,180,0.06);
+}
+.quick-link-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,229,180,0.10);
+  color: var(--accent);
+  font-family: 'DM Mono';
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.quick-link-text {
+  font-family: 'DM Mono';
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.75);
+  white-space: nowrap;
 }
 
 /* ── ROLE CARDS ── */
-.role-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  animation: fadeUp 0.7s 0.2s ease both;
-}
+.role-list { display: flex; flex-direction: column; gap: 12px; animation: fadeUp 0.7s 0.2s ease both; }
 
 .role-btn {
   width: 100%;
-  padding: 22px 24px;
-  border: 2px solid var(--dim2);
-  border-radius: 10px;
-  background: transparent;
+  padding: 20px 22px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
   color: var(--fg);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: border-color 0.3s, background 0.3s;
+  transition: all 0.3s;
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
+.role-btn::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: linear-gradient(135deg, rgba(0,229,180,0.05), transparent);
+  opacity:0;
+  transition: opacity 0.3s;
+}
+.role-btn:hover { border-color: var(--accent); transform: translateX(4px); }
+.role-btn:hover::before { opacity: 1; }
 
-.role-btn:hover {
-  border-color: var(--accent);
-  background: rgba(255,255,255,0.04);
-}
-
-.role-btn-label {
-  font-family: 'Bebas Neue';
-  font-size: 1.25rem;
-  letter-spacing: 3px;
-  margin-bottom: 4px;
-}
-
-.role-btn-desc {
-  font-family: 'DM Mono';
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 1px;
-}
-
-.role-arrow {
-  width: 20px; height: 20px;
-  stroke: var(--accent);
-  flex-shrink: 0;
-  transition: transform 0.3s;
-}
-.role-btn:hover .role-arrow { transform: translateX(4px); }
+.role-icon { width: 36px; height: 36px; background: rgba(0,229,180,0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; margin-right:16px; flex-shrink:0; }
+.role-icon svg { width: 18px; height: 18px; stroke: var(--accent); }
+.role-info { flex: 1; }
+.role-btn-label { font-family: 'Bebas Neue'; font-size: 1.15rem; letter-spacing: 3px; margin-bottom: 2px; }
+.role-btn-desc { font-family: 'DM Mono'; font-size: 0.68rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+.role-arrow { width: 18px; height: 18px; stroke: rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.3s; }
+.role-btn:hover .role-arrow { stroke: var(--accent); transform: translateX(3px); }
 
 /* ── FORM ── */
 .form-wrap { animation: fadeUp 0.5s ease both; }
 
 .back-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.5);
-  font-family: 'DM Mono';
-  font-size: 0.75rem;
-  letter-spacing: 2px;
-  cursor: pointer;
-  margin-bottom: 36px;
-  padding: 0;
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: 'DM Mono'; font-size: 0.72rem; letter-spacing: 2px;
+  cursor: pointer; margin-bottom: 32px; padding: 0;
   transition: color 0.3s;
 }
 .back-btn:hover { color: var(--accent); }
-.back-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+.back-btn svg { width: 15px; height: 15px; stroke: currentColor; }
 
-.form-group { margin-bottom: 22px; }
-
-.form-label {
-  display: block;
-  font-family: 'Bebas Neue';
-  font-size: 0.85rem;
-  letter-spacing: 3px;
-  color: rgba(255,255,255,0.8);
-  margin-bottom: 10px;
+.role-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,229,180,0.08); border: 1px solid rgba(0,229,180,0.2);
+  border-radius: 100px; padding: 6px 14px;
+  font-family: 'DM Mono'; font-size: 0.68rem; letter-spacing: 2px;
+  color: var(--accent); margin-bottom: 28px;
 }
+.role-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1.5s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; font-family: 'Bebas Neue'; font-size: 0.82rem; letter-spacing: 3px; color: rgba(255,255,255,0.7); margin-bottom: 10px; }
+
+.input-wrap { position: relative; }
+.input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: rgba(255,255,255,0.3); }
 .form-input {
   width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--dim2);
-  border-radius: 8px;
-  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 14px 16px 14px 42px;
   color: var(--fg);
-  font-family: 'DM Mono';
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  outline: none;
-  transition: border-color 0.3s;
+  font-family: 'DM Mono'; font-size: 0.83rem; letter-spacing: 1px;
+  outline: none; transition: all 0.3s;
 }
-.form-input::placeholder { color: rgba(255,255,255,0.3); }
-.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: rgba(255,255,255,0.25); }
+.form-input:focus { border-color: var(--accent); background: rgba(0,229,180,0.04); }
 
 .submit-btn {
   width: 100%;
   background: var(--accent);
-  color: var(--bg);
-  border: none;
-  border-radius: 8px;
+  color: #06080b;
+  border: none; border-radius: 10px;
   padding: 16px;
-  font-family: 'Bebas Neue';
-  font-size: 1.1rem;
-  letter-spacing: 4px;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: background 0.3s, opacity 0.3s;
+  font-family: 'Bebas Neue'; font-size: 1.1rem; letter-spacing: 4px;
+  cursor: pointer; margin-top: 8px;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
 }
-.submit-btn:hover { background: #fff; }
-.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn::after {
+  content:'';
+  position:absolute; top:50%; left:50%; width:0; height:0;
+  background: rgba(255,255,255,0.2); border-radius:50%;
+  transform: translate(-50%,-50%);
+  transition: width 0.4s, height 0.4s;
+}
+.submit-btn:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,180,0.3); }
+.submit-btn:active::after { width: 300px; height: 300px; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-.form-note {
-  font-family: 'DM Mono';
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.4);
-  text-align: center;
-  margin-top: 24px;
-}
+.form-note { font-family: 'DM Mono'; font-size: 0.65rem; letter-spacing: 1px; color: rgba(255,255,255,0.35); text-align: center; margin-top: 20px; }
 
-/* success */
-.success-wrap {
-  text-align: center;
-  animation: fadeUp 0.6s ease both;
-}
-.success-icon {
-  width: 60px; height: 60px;
-  background: rgba(0,229,180,0.12);
-  border: 1px solid rgba(0,229,180,0.4);
+/* ── SUCCESS ── */
+.success-wrap { text-align: center; animation: fadeUp 0.6s ease both; }
+.success-ring {
+  width: 80px; height: 80px;
+  border: 1px solid rgba(0,229,180,0.3);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   margin: 0 auto 24px;
+  position: relative;
+  animation: ring-spin 3s linear infinite;
 }
-.success-icon svg { width: 28px; height: 28px; stroke: var(--accent); }
-.success-title {
-  font-family: 'Bebas Neue';
-  font-size: 2rem;
-  letter-spacing: 4px;
-  margin-bottom: 10px;
+.success-ring::before {
+  content:'';
+  position:absolute; inset:-8px;
+  border: 1px solid transparent;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ring-spin 1.5s linear infinite;
 }
-.success-sub {
-  font-family: 'DM Mono';
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 1px;
-}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+.success-ring svg { width: 32px; height: 32px; stroke: var(--accent); }
+.success-title { font-family: 'Bebas Neue'; font-size: 2.2rem; letter-spacing: 4px; margin-bottom: 10px; }
+.success-sub { font-family: 'DM Mono'; font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; line-height: 1.8; }
 
-/* hidden */
 .hidden { display: none !important; }
-
-/* animations */
-@keyframes fadeUp   { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-@keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
@@ -332,6 +379,7 @@ body {
 <!-- LEFT -->
 <div class="left">
   <div class="diagonal-grid"></div>
+  <div class="glow-orb"></div>
 
   <div class="left-brand">
     <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -342,96 +390,168 @@ body {
 
   <div class="left-body">
     <h2 class="left-heading">Dean's<br><span>Award</span><br>Ceremony</h2>
-    <p class="left-sub">Join us in celebrating excellence in Big Data Analysis, Machine Learning, and Technology Innovation.</p>
-    <div class="left-stats">
-      <div class="stat-item"><div class="stat-dot"></div>2026 Award Year</div>
-      <div class="stat-item"><div class="stat-dot"></div>12+ Categories</div>
-      <div class="stat-item"><div class="stat-dot"></div>50+ Nominees</div>
-    </div>
-  </div>
+    <p class="left-sub">Celebrating excellence in TVETMARA Lumut.</p>
 
-  <div class="left-img">
-    <img src="https://static.wixstatic.com/media/611fdf_9770984919b2487eafe40dd42197fceb~mv2.png" alt="ceremony">
+    <div class="left-stats">
+      <div class="stat-box">
+        <div class="stat-val">2026</div>
+        <div class="stat-lbl">Award Year</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">12+</div>
+        <div class="stat-lbl">Categories</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">50+</div>
+        <div class="stat-lbl">Nominees</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">3</div>
+        <div class="stat-lbl">Tracks</div>
+      </div>
+    </div>
+
+    <div class="ticker">
+      <div class="ticker-inner">
+<span>Best Overall Student Award</span><span class="ticker-dot">✦</span>
+<span>Academic Excellence Award</span><span class="ticker-dot">✦</span>
+<span>Dean's List Award</span><span class="ticker-dot">✦</span>
+<span>Best Program Graduate</span><span class="ticker-dot">✦</span>
+<span>Outstanding Leadership Award</span><span class="ticker-dot">✦</span>
+<span>Extracurricular Achievement Award</span><span class="ticker-dot">✦</span>
+<span>Innovation & Research Award</span><span class="ticker-dot">✦</span>
+<span>Community Service Excellence Award</span><span class="ticker-dot">✦</span>
+<span>Best Final Year Project Award</span><span class="ticker-dot">✦</span>
+<span>Sportsman & Sportswoman of the Year</span><span class="ticker-dot">✦</span>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- RIGHT -->
 <div class="right">
   <div class="right-inner">
+    <div class="mobile-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+      </svg>
+      <span>SMARTCONVO</span>
+    </div>
+
+    <!-- Bottom-right quick links -->
+    <div class="quick-links">
+      <button type="button" class="quick-link" onclick="window.location.href='aboutus.html'" aria-label="About Us">
+        <span class="quick-link-icon" aria-hidden="true">i</span>
+        <span class="quick-link-text">About Us</span>
+      </button>
+      <button type="button" class="quick-link" onclick="window.location.href='contact.html'" aria-label="Contact Us">
+        <span class="quick-link-icon" aria-hidden="true">☎</span>
+        <span class="quick-link-text">Contact</span>
+      </button>
+    </div>
 
     <!-- Header -->
     <div class="right-header">
       <h1 class="right-title">Welcome</h1>
-      <p class="right-sub">Select your role to get started</p>
+      <p class="right-sub">Select your role to continue</p>
     </div>
 
     <!-- Step 1: Role Selection -->
     <div id="step-role" class="role-list">
       <button class="role-btn" onclick="selectRole('guest')">
-        <div>
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="role-info">
           <div class="role-btn-label">Guest</div>
           <div class="role-btn-desc">Browse awards and categories</div>
         </div>
-        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
 
       <button class="role-btn" onclick="selectRole('student')">
-        <div>
-          <div class="role-btn-label">Student</div>
-          <div class="role-btn-desc">Submit your project and participate</div>
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
         </div>
-        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
+        <div class="role-info">
+          <div class="role-btn-label">Student</div>
+          <div class="role-btn-desc">Update Your Latest Data</div>
+        </div>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
 
-      <button class="role-btn" onclick="window.location.href='/admin/login'">
-        <div>
+      <button class="role-btn" onclick="selectRole('admin')">
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="role-info">
           <div class="role-btn-label">Admin</div>
           <div class="role-btn-desc">Manage awards and categories</div>
         </div>
-        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
+        <svg class="role-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
     </div>
 
     <!-- Step 2: Form -->
     <div id="step-form" class="form-wrap hidden">
       <button class="back-btn" onclick="goBack()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         Back
       </button>
+
+      <div class="role-badge" id="role-badge">
+        <div class="role-badge-dot"></div>
+        <span id="role-badge-text">GUEST</span>
+      </div>
 
       <form onsubmit="handleSubmit(event)">
         <div class="form-group">
           <label class="form-label">Full Name</label>
-          <input class="form-input" type="text" name="name" placeholder="Enter your full name" required>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input class="form-input" type="text" name="name" placeholder="Enter your full name" required>
+          </div>
         </div>
+
         <div class="form-group">
           <label class="form-label">Email Address</label>
-          <input class="form-input" type="email" name="email" placeholder="Enter your email" required>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input class="form-input" type="email" name="email" placeholder="Enter your email" required>
+          </div>
         </div>
+
         <div class="form-group hidden" id="student-id-group">
           <label class="form-label">Student ID</label>
-          <input class="form-input" type="text" name="studentId" placeholder="Enter your student ID">
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <input class="form-input" type="text" name="studentId" placeholder="Enter your student ID">
+          </div>
         </div>
+
+        <div class="form-group hidden" id="admin-pass-group">
+          <label class="form-label">Admin Password</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input class="form-input" type="password" name="adminPass" placeholder="Enter admin password">
+          </div>
+        </div>
+
         <button class="submit-btn" type="submit" id="submit-btn">Continue</button>
       </form>
-
       <p class="form-note" id="form-note"></p>
     </div>
 
     <!-- Step 3: Success -->
     <div id="step-success" class="success-wrap hidden">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 6L9 17l-5-5"/>
-        </svg>
+      <div class="success-ring">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       </div>
       <div class="success-title">You're In!</div>
       <p class="success-sub" id="success-msg">Redirecting you now...</p>
@@ -443,53 +563,130 @@ body {
 <script>
 let currentRole = null;
 
+// IKM LUMUT COURSES (FOR SYSTEM LOGIC)
+const courses = [
+"Diploma Teknologi Perkhidmatan Air",
+"Diploma Teknologi Komputer (Analisa Data Besar)",
+"Diploma Teknologi Kejuruteraan — Pembuatan Pintar",
+"Diploma Teknologi Pengeluaran Perabot Kontemporari",
+"Diploma Kompetensi Kimpalan",
+"Diploma Kompetensi Penjaga Jentera Elektrik Voltan A4",
+"Diploma Kompetensi Elektrik (Domestik & Industri) PW4",
+"Diploma Teknologi Automotif",
+"Diploma Teknologi Automotif — Baikpulih & Kemas Badan Kenderaan",
+"Sijil Teknologi Kejuruteraan Mekanikal (Lukisan Rekabentuk)",
+"Sijil Teknologi Kejuruteraan Bangunan",
+"Sijil Teknologi Foundri",
+"Sijil Senibina"
+];
+
+// ROLE SELECTION
 function selectRole(role) {
-  currentRole = role;
-  document.getElementById('step-role').classList.add('hidden');
-  document.getElementById('step-form').classList.remove('hidden');
+  // Each role routes to its dedicated login page
+  const routes = {
+    guest: "login-guest.html",
+    student: "login-student.html",
+    admin: "login-admin.html"
+  };
 
-  const studentGroup = document.getElementById('student-id-group');
-  const note = document.getElementById('form-note');
-  const studentIdInput = studentGroup.querySelector('input');
-
-  if (role === 'student') {
-    studentGroup.classList.remove('hidden');
-    studentIdInput.required = true;
-    note.textContent = 'Submit your project for consideration';
-  } else {
-    studentGroup.classList.add('hidden');
-    studentIdInput.required = false;
-    note.textContent = 'Browse all award categories and nominees';
-  }
+  window.location.href = routes[role] || "index.html";
 }
 
+
+// BACK BUTTON
 function goBack() {
   currentRole = null;
   document.getElementById('step-form').classList.add('hidden');
   document.getElementById('step-role').classList.remove('hidden');
 }
 
+// LOGIN SUBMIT (SMARTCONVO LOGIC)
 function handleSubmit(e) {
   e.preventDefault();
+
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.textContent = 'Signing In...';
+  btn.textContent = 'Authenticating...';
+
+  const data = new FormData(e.target);
+
+  const name = data.get('name');
+  const email = data.get('email');
+  const studentId = data.get('studentId');
+  const adminPass = data.get('adminPass');
 
   setTimeout(() => {
-    const data = new FormData(e.target);
-    localStorage.setItem('userType', currentRole);
-    localStorage.setItem('userName', data.get('name'));
-    localStorage.setItem('userEmail', data.get('email'));
-    if (currentRole === 'student') localStorage.setItem('studentId', data.get('studentId'));
 
+    // =========================
+    // ADMIN VALIDATION
+    // =========================
+    if (currentRole === 'admin') {
+      if (adminPass !== "12345") {
+        alert("Invalid Admin Password!");
+        btn.disabled = false;
+        btn.textContent = "Continue";
+        return;
+      }
+    }
+
+    // =========================
+    // STUDENT VALIDATION
+    // =========================
+    if (currentRole === 'student') {
+      if (!studentId) {
+        alert("Student ID required!");
+        btn.disabled = false;
+        btn.textContent = "Continue";
+        return;
+      }
+    }
+
+    // =========================
+    // SESSION STORAGE (SMARTCONVO)
+    // =========================
+    const session = {
+      role: currentRole,
+      name: name,
+      email: email,
+      studentId: studentId || null,
+      loginTime: new Date().toISOString()
+    };
+
+    localStorage.setItem("smartconvo_user", JSON.stringify(session));
+
+    // =========================
+    // SUCCESS UI
+    // =========================
     document.getElementById('step-form').classList.add('hidden');
     const success = document.getElementById('step-success');
     success.classList.remove('hidden');
-    document.getElementById('success-msg').textContent =
-      `Signed in as ${currentRole.charAt(0).toUpperCase() + currentRole.slice(1)} — redirecting to /home`;
 
-    // setTimeout(() => window.location.href = '/home', 1500);
+    document.getElementById('success-msg').textContent =
+      `Welcome ${name} — Redirecting to ${currentRole} dashboard...`;
+
+    // =========================
+    // REDIRECT SYSTEM
+    // =========================
+    const routes = {
+      guest: "guest.html",
+      student: "student.html",
+      admin: "admin.html"
+    };
+
+    setTimeout(() => {
+      window.location.href = routes[currentRole];
+    }, 1800);
+
   }, 1000);
+}
+
+// OPTIONAL: GET SYSTEM INFO (FOR FUTURE DASHBOARD)
+function getSystemInfo() {
+  return {
+    totalCourses: courses.length,
+    system: "SMARTCONVO",
+    version: "1.0"
+  };
 }
 </script>
 </body>

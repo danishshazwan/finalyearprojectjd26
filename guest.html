@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Guest Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.55);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-y:auto; }
+
+.layout { display: flex; min-height: calc(100vh - 64px); }
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,0.01);
+  padding: 28px 18px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+.main { flex: 1; min-height: 100vh; overflow-y: auto; }
+
+/* Sidebar */
+.sb-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding: 0 8px; }
+.sb-brand-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+.sb-brand-title { font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color: rgba(255,255,255,0.65); }
+
+.sb-section { display:flex; flex-direction: column; gap:10px; padding: 0 8px; }
+.sb-link {
+  width:100%;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--fg);
+  border-radius: 12px;
+  padding: 12px 12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition: all 0.3s;
+}
+.sb-link:hover { border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06); transform: translateX(4px); }
+.sb-icon { width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background: rgba(0,229,180,0.08); color: var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+.sb-text { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color: rgba(255,255,255,0.72); }
+
+.sb-footer { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; padding-left: 8px; padding-right: 8px; }
+.sb-footer-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.sb-footer-name { font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color: var(--accent); }
+
+/* Top green profile button */
+.nav-profile {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: rgba(0,229,180,0.10);
+  border: 1px solid rgba(0,229,180,0.35);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 6px 14px;
+  text-decoration:none;
+  transition: all 0.3s;
+  font-family:'DM Mono';
+  font-size:0.7rem;
+  letter-spacing:2px;
+}
+.nav-profile:hover { background: rgba(0,229,180,0.18); transform: translateY(-1px); }
+.nav-profile-dot { width:7px; height:7px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 6px rgba(0,229,180,0.08); }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; position: relative; top: auto; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .main { min-height: auto; }
+}
+
+
+
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0.025; pointer-events:none; z-index:9999;
+}
+
+/* NAV */
+nav {
+  position: sticky; top:0; z-index:100;
+  background: rgba(6,8,11,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+  animation: fadeDown 0.6s ease both;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; }
+.nav-brand svg { width:24px; height:24px; color: var(--accent); }
+.nav-brand span { font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+.nav-badge { background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.25); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:var(--accent); }
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-user { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color: var(--dim); }
+.nav-logout { background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+.nav-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+/* HERO */
+.hero {
+  padding: 100px 32px 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero-glow {
+  position:absolute; top:-100px; left:50%; transform:translateX(-50%);
+  width:700px; height:400px;
+  background: radial-gradient(ellipse, rgba(0,229,180,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow { font-family:'DM Mono'; font-size:0.72rem; letter-spacing:4px; color:var(--accent); margin-bottom:20px; animation: fadeUp 0.6s 0.1s ease both; }
+.hero-title { font-family:'Bebas Neue'; font-size:clamp(3.5rem,8vw,6rem); letter-spacing:4px; line-height:0.95; margin-bottom:24px; animation: fadeUp 0.6s 0.2s ease both; }
+.hero-title span { color:var(--accent); }
+.hero-sub { font-size:1rem; color:var(--dim); max-width:480px; margin:0 auto 40px; line-height:1.8; animation: fadeUp 0.6s 0.3s ease both; }
+.hero-chips { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; animation: fadeUp 0.6s 0.4s ease both; }
+.chip { background:var(--card); border:1px solid var(--line); border-radius:100px; padding:7px 16px; font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; color:var(--dim); }
+
+/* SECTION */
+.section { padding: 80px 32px; max-width: 1200px; margin: 0 auto; }
+.section-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:40px; flex-wrap:wrap; gap:12px; }
+.section-title { font-family:'Bebas Neue'; font-size:2rem; letter-spacing:3px; }
+.section-title span { color:var(--accent); }
+.section-count { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:2px; color:rgba(255,255,255,0.3); }
+.divider { border:none; border-top:1px solid var(--line); margin-bottom:80px; }
+
+/* CATEGORY GRID */
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.cat-card {
+  background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:28px; cursor:default; position:relative; overflow:hidden;
+  transition: all 0.3s;
+  animation: fadeUp 0.5s ease both;
+}
+.cat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity:0; transition:opacity 0.3s;
+}
+.cat-card:hover { border-color:rgba(0,229,180,0.3); transform:translateY(-3px); background:rgba(255,255,255,0.05); }
+.cat-card:hover::before { opacity:1; }
+.cat-num { font-family:'Bebas Neue'; font-size:3rem; letter-spacing:2px; color:rgba(255,255,255,0.05); line-height:1; margin-bottom:12px; }
+.cat-name { font-family:'Bebas Neue'; font-size:1.2rem; letter-spacing:3px; margin-bottom:8px; }
+.cat-desc { font-family:'DM Mono'; font-size:0.68rem; letter-spacing:1px; color:rgba(255,255,255,0.4); line-height:1.7; }
+.cat-badge { display:inline-block; margin-top:16px; background:rgba(0,229,180,0.08); border:1px solid rgba(0,229,180,0.2); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color:var(--accent); }
+
+/* NOMINEES */
+.nom-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.nom-card {
+  background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:24px; display:flex; align-items:center; gap:20px;
+  transition:all 0.3s;
+  animation: fadeUp 0.5s ease both;
+}
+.nom-card:hover { border-color:rgba(0,229,180,0.25); background:rgba(255,255,255,0.04); }
+.nom-avatar {
+  width:50px; height:50px; border-radius:50%;
+  background: linear-gradient(135deg, rgba(0,229,180,0.2), rgba(43,43,255,0.2));
+  border:1px solid rgba(0,229,180,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:1px; color:var(--accent);
+  flex-shrink:0;
+}
+.nom-info { flex:1; min-width:0; }
+.nom-name { font-family:'Syne'; font-weight:700; font-size:0.9rem; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nom-cat { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:var(--accent); margin-bottom:4px; }
+.nom-id { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:1px; color:rgba(255,255,255,0.3); }
+
+/* SCHEDULE */
+.schedule-list { display:flex; flex-direction:column; gap:0; }
+.sched-item {
+  display:flex; gap:32px; padding:28px 0;
+  border-bottom:1px solid var(--line);
+  align-items:flex-start;
+  animation: fadeUp 0.5s ease both;
+}
+.sched-time { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:2px; color:var(--accent); width:80px; flex-shrink:0; padding-top:2px; }
+.sched-body { flex:1; }
+.sched-title { font-family:'Syne'; font-weight:700; font-size:1rem; margin-bottom:6px; }
+.sched-desc { font-family:'DM Mono'; font-size:0.68rem; letter-spacing:1px; color:rgba(255,255,255,0.4); line-height:1.7; }
+.sched-tag { display:inline-block; margin-top:10px; background:rgba(255,255,255,0.05); border:1px solid var(--line); border-radius:100px; padding:3px 10px; font-family:'DM Mono'; font-size:0.6rem; letter-spacing:2px; color:rgba(255,255,255,0.4); }
+
+/* FAQ */
+.faq-list { display:flex; flex-direction:column; gap:8px; }
+.faq-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; animation:fadeUp 0.5s ease both; }
+.faq-q {
+  width:100%; padding:20px 24px; background:var(--card);
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; border:none; color:var(--fg); font-family:'Syne'; font-weight:700; font-size:0.9rem; text-align:left;
+  transition:background 0.3s;
+}
+.faq-q:hover { background:rgba(255,255,255,0.05); }
+.faq-icon { width:18px; height:18px; stroke:var(--accent); transition:transform 0.3s; flex-shrink:0; }
+.faq-item.open .faq-icon { transform:rotate(45deg); }
+.faq-a { max-height:0; overflow:hidden; transition:max-height 0.4s ease; }
+.faq-a-inner { padding:0 24px 20px; font-family:'DM Mono'; font-size:0.72rem; letter-spacing:1px; color:rgba(255,255,255,0.5); line-height:1.8; }
+.faq-item.open .faq-a { max-height:200px; }
+
+/* FOOTER */
+footer { border-top:1px solid var(--line); padding:40px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+.footer-brand { display:flex; align-items:center; gap:10px; }
+.footer-brand svg { width:20px; height:20px; color:var(--accent); }
+.footer-brand span { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+.footer-copy { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+/* ANIMATIONS */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+
+  <div class="nav-right">
+    <!-- Green role/button (top) -->
+    <a class="nav-profile" id="nav-profile" href="guestprofile.html" aria-label="Go to profile">
+      <span class="nav-profile-dot" aria-hidden="true"></span>
+      <span id="nav-profile-text">Profile</span>
+    </a>
+
+    <span class="nav-user" id="nav-user">—</span>
+    <button class="nav-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Layout + Sidebar -->
+<div class="layout">
+  <aside class="sidebar" aria-label="Sidebar Menu">
+    <div class="sb-brand">
+      <div class="sb-brand-dot" aria-hidden="true"></div>
+      <div class="sb-brand-title">Menu</div>
+    </div>
+
+    <div class="sb-section">
+      <button class="sb-link" type="button" onclick="window.location.href='guest.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+        <span class="sb-icon" aria-hidden="true">⌂</span>
+        <span class="sb-text">Guest Portal</span>
+      </button>
+
+ <button class="sb-link" type="button" onclick="window.location.href='guest-graduate-status.html'">
+  <span class="sb-icon" aria-hidden="true">✓</span>
+  <span class="sb-text">Graduate Status</span>
+</button>
+
+<button class="sb-link" type="button" onclick="window.location.href='guestvote.html'">
+  <span class="sb-icon" aria-hidden="true">🗳️</span>
+  <span class="sb-text">Graduate Voting</span>
+</button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-hall-live.html'">
+        <span class="sb-icon" aria-hidden="true">◷</span>
+        <span class="sb-text">Hall Live</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-award-gallery.html'">
+        <span class="sb-icon" aria-hidden="true">★</span>
+        <span class="sb-text">Award Gallery</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='guest-live-announcement.html'">
+        <span class="sb-icon" aria-hidden="true">!</span>
+        <span class="sb-text">Announcements</span>
+      </button>
+
+            <button class="sb-link" type="button" onclick="window.location.href='guestprofile.html'">
+        <span class="sb-icon" aria-hidden="true">☺</span>
+        <span class="sb-text">My Profile</span>
+      </button> 
+
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-label">Logged in as</div>
+      <div class="sb-footer-name" id="sb-footer-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <p class="hero-eyebrow">Dean's Award Ceremony 2026</p>
+  <h1 class="hero-title">Celebrating<br><span>Excellence</span></h1>
+  <p class="hero-sub">Explore award categories, nominees, and the ceremony schedule for this year's prestigious recognition.</p>
+   <div class="hero-chips">
+<div class="chip">Live Convocation Flow</div>
+<div class="chip">Digital Award Tracking</div>
+<div class="chip">Merit-Based Selection</div>
+<div class="chip">12+ Award Categories</div>
+<div class="chip">Academic Excellence</div>
+<div class="chip">Real-time Seat Updates</div>
+  </div> 
+</section>
+
+<hr class="divider">
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">Award <span>Categories</span></h2>
+    <span class="section-count">10 Categories</span>
+  </div>
+  <div class="cat-grid" id="cat-grid"></div>
+</section>
+
+<hr class="divider">
+
+<!-- NOMINEES -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">This Year's <span>Nominees</span></h2>
+    <span class="section-count">Featured Nominees</span>
+  </div>
+  <div class="nom-grid" id="nom-grid"></div>
+</section>
+
+<hr class="divider">
+
+<!-- SCHEDULE -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">Ceremony <span>Schedule</span></h2>
+    <span class="section-count">10 April 2026</span>
+  </div>
+  <div class="schedule-list" id="schedule-list"></div>
+</section>
+
+<hr class="divider">
+
+<!-- FAQ -->
+<section class="section">
+  <div class="section-header">
+    <h2 class="section-title">Frequently <span>Asked</span></h2>
+  </div>
+  <div class="faq-list" id="faq-list"></div>
+</section>
+
+<footer>
+  <div class="footer-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+  <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+</footer>
+
+<script>
+// Auth check
+const storedUserName = localStorage.getItem('userName');
+let smartconvoUserName = null;
+try {
+  const raw = localStorage.getItem('smartconvo_user');
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    smartconvoUserName = parsed?.name || parsed?.email || null;
+  }
+} catch (e) {}
+
+const userName = storedUserName || smartconvoUserName || 'Guest';
+document.getElementById('nav-user').textContent = userName;
+document.getElementById('sb-footer-name').textContent = userName;
+// Keep profile button text as-is
+// (User name shown in nav-user and sidebar footer)
+const profileTextEl = document.getElementById('nav-profile-text');
+if (profileTextEl && profileTextEl.textContent.trim() === '') profileTextEl.textContent = 'PROFILE';
+
+function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+// Data
+const categories = [
+  { name:'Best Overall Student Award', desc:'Recognising outstanding overall achievement across academics, leadership, and contributions.', track:'Overall' },
+  { name:'Academic Excellence Award', desc:"Honouring consistent academic performance and excellence in coursework.", track:'Academics' },
+  { name:"Dean's List Award", desc:'Awarded to students who consistently achieve top academic results.', track:'Dean\'s List' },
+  { name:'Best Program Graduate', desc:'Celebrating exceptional performance and achievement among the graduating batch.', track:'Program Graduate' },
+  { name:'Outstanding Leadership Award', desc:'Recognising students who demonstrate strong leadership and positive influence.', track:'Leadership' },
+  { name:'Extracurricular Achievement Award', desc:'Honouring impactful participation and achievement outside the classroom.', track:'Extracurricular' },
+  { name:'Innovation & Research Award', desc:'Recognising innovative thinking and research contributions.', track:'Innovation & Research' },
+  { name:'Best Final Year Project Award', desc:'Awarded for the most outstanding final year project proposal and outcomes.', track:'Final Year Project' },
+  { name:'Sportsman & Sportswoman of the Year', desc:'Recognising outstanding sports achievements and consistent performance.', track:'Sports' },
+];
+
+const nominees = [
+  { name:'Danish Shazwan Bin Suwandi', cat:'Best Overall Student Award', id:'2402076' },
+  { name:'Iskandar Zulkarnain Bin Muhammad', cat:'Academic Excellence Award', id:'2402077' },
+  { name:'Lily Liyana Lorraine Binti Jale', cat:"Dean's List Award", id:'2402078' },
+  { name:'Mior Muhammad Ikmal Bin Mior', cat:'Best Program Graduate', id:'2402079' },
+  { name:'Muhammad Ammar Bin Mahadir', cat:'Outstanding Leadership Award', id:'2402080' },
+  { name:'Muhammad Hafiz Bin Hassan', cat:'Extracurricular Achievement Award', id:' 2402081' },
+  { name:'Muhammad Haziq Afiq Bin Yazid @ Yusli', cat:'Innovation & Research Award', id:'2402082' },
+  { name:'Muhammad Syamsul Nazir Bin Samsuri', cat:'Best Final Year Project Award', id:'2402083' },
+  { name:'Nur Adilah Binti Shamsuddin', cat:'Sportsman & Sportswoman of the Year', id:' 2402084' },
+  { name:'Nur Ain Solehah Binti Muhd Fauzi', cat:"People's Choice", id:'2402085' },
+  { name:'Nur Fadhilatul Akma Binti Roslan', cat:'Best Overall Student Award', id:' 2402086' },
+  { name:'Nur Fatin Nadiah Binti Mohd Khir', cat:'Academic Excellence Award', id:' 2402087' },
+  { name:'Nursyazwanie Binti Jaimi', cat:"Dean's List Award", id:'2402088' },
+];
+
+
+const schedule = [
+  { time:'08:30', title:'Registration & Arrival', desc:'Guests and nominees register at the main hall. Light refreshments will be served.', tag:'Registration' },
+  { time:'09:00', title:'Opening Ceremony', desc:'Welcome address by the Dean and Faculty Director. Introduction of the award programme.', tag:'Ceremony' },
+  { time:'09:30', title:'Category Awards — Part I', desc:'Presentation of awards for Big Data, Machine Learning, and Visualisation categories.', tag:'Awards' },
+  { time:'10:30', title:'Break & Networking', desc:'Short refreshment break. Opportunity to view poster and project exhibitions.', tag:'Break' },
+  { time:'11:00', title:'Category Awards — Part II', desc:'Continuation with Innovation, Research, Impact, and Teamwork categories.', tag:'Awards' },
+  { time:'12:00', title:'Dean\'s Special Award', desc:'Presentation of the Dean\'s Special Award and People\'s Choice Award.', tag:'Special' },
+  { time:'12:30', title:'Closing Remarks & Photography', desc:'Official closing by Dean. Group photography session with all award recipients.', tag:'Closing' },
+  { time:'13:00', title:'Lunch & Celebration', desc:'Celebratory lunch for all attendees, nominees, and faculty members.', tag:'Networking' },
+];
+
+const faqs = [
+  { q:'Who can attend the Dean\'s Award Ceremony?', a:'The ceremony is open to all students, faculty members, and invited guests. Registration is required to attend.' },
+  { q:'How are nominees selected?', a:'Nominees are selected by the faculty panel based on project quality, innovation, academic performance, and peer nominations submitted before the deadline.' },
+  { q:'Can I submit a project as a guest?', a:'Guests can browse and view all award information. To submit a project, you need to log in as a Student and provide your student credentials.' },
+  { q:'Where will the ceremony be held?', a:'The ceremony will be held in the Main Auditorium, Faculty of Computing, Level 3. Please arrive 15 minutes early.' },
+  { q:'Will the ceremony be live streamed?', a:'Yes, the ceremony will be streamed on the faculty\'s official YouTube channel. A link will be shared closer to the date.' },
+];
+
+// Render categories
+const catGrid = document.getElementById('cat-grid');
+categories.forEach((c, i) => {
+  catGrid.innerHTML += `
+    <div class="cat-card" style="animation-delay:${i*0.06}s">
+      <div class="cat-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-desc">${c.desc}</div>
+      <span class="cat-badge">${c.track}</span>
+    </div>`;
+});
+
+// Render nominees
+const nomGrid = document.getElementById('nom-grid');
+nominees.forEach((n, i) => {
+  const initials = n.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  nomGrid.innerHTML += `
+    <div class="nom-card" style="animation-delay:${i*0.05}s">
+      <div class="nom-avatar">${initials}</div>
+      <div class="nom-info">
+        <div class="nom-name">${n.name}</div>
+        <div class="nom-cat">${n.cat}</div>
+        <div class="nom-id">${n.id}</div>
+      </div>
+    </div>`;
+});
+
+// Render schedule
+const schedList = document.getElementById('schedule-list');
+schedule.forEach((s, i) => {
+  schedList.innerHTML += `
+    <div class="sched-item" style="animation-delay:${i*0.07}s">
+      <div class="sched-time">${s.time}</div>
+      <div class="sched-body">
+        <div class="sched-title">${s.title}</div>
+        <div class="sched-desc">${s.desc}</div>
+        <span class="sched-tag">${s.tag}</span>
+      </div>
+    </div>`;
+});
+
+// Render FAQ
+const faqList = document.getElementById('faq-list');
+faqs.forEach((f, i) => {
+  faqList.innerHTML += `
+    <div class="faq-item" style="animation-delay:${i*0.08}s">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        ${f.q}
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="faq-a"><div class="faq-a-inner">${f.a}</div></div>
+    </div>`;
+});
+
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>

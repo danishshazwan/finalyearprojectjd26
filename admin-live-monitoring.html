@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — AI Command Center | Live Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/*
+  SMARTCONVO — Live Monitoring Page
+  UI/Sidebar style is copied from admin.html (same classnames/layout).
+*/
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent:    #00e5b4;
+  --accent2:   #00b8ff;
+  --red:       #ff4d6d;
+  --gold:      #f0c040;
+  --blue:      #4d7fff;
+  --purple:    #a855f7;
+  --bg:        #06080d;
+  --fg:        #e8eaf0;
+  --line:      rgba(255,255,255,0.07);
+  --card:      rgba(255,255,255,0.025);
+  --sidebar-w: 260px;
+  --topbar-h:  64px;
+  --radius:    14px;
+  --radius-sm: 8px;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.022; pointer-events: none; z-index: 9999;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 900px 600px at 15% 0%, rgba(0,229,180,0.055) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 85% 100%, rgba(0,184,255,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 50% 50%, rgba(77,127,255,0.025) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: rgba(8,11,18,0.96);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  z-index: 100;
+  backdrop-filter: blur(24px);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.sidebar::after {
+  content: '';
+  position: absolute; top: 0; right: -1px; width: 1px; height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,229,180,0.25) 40%, rgba(0,229,180,0.1) 70%, transparent 100%);
+}
+.sb-brand { padding: 28px 22px 22px; border-bottom: 1px solid var(--line); }
+.sb-logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sb-logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, rgba(0,229,180,0.15), rgba(0,184,255,0.1));
+  border: 1px solid rgba(0,229,180,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px rgba(0,229,180,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.sb-logo-icon svg { width: 18px; height: 18px; color: var(--accent); }
+.sb-name { font-family: 'Bebas Neue'; font-size: 1.25rem; letter-spacing: 6px; line-height: 1; }
+.sb-tagline { font-family: 'DM Mono'; font-size: 0.57rem; letter-spacing: 2.5px; color: rgba(255,255,255,0.25); margin-bottom: 12px; }
+.sb-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.sb-badge {
+  font-family: 'DM Mono'; font-size: 0.55rem; letter-spacing: 2px;
+  border-radius: 100px; padding: 3px 9px; display: inline-block;
+}
+.sb-badge.admin { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: var(--red); }
+.sb-badge.live { background: rgba(0,229,180,0.1); border: 1px solid rgba(0,229,180,0.25); color: var(--accent); animation: pulseBadge 2s infinite; }
+@keyframes pulseBadge { 0%,100% { box-shadow: none; } 50% { box-shadow: 0 0 8px rgba(0,229,180,0.3); } }
+
+.sb-status-row { display: flex; align-items: center; gap: 8px; padding: 10px 22px; border-bottom: 1px solid var(--line); background: rgba(0,229,180,0.02); }
+.sb-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blinkDot 1.5s infinite; }
+@keyframes blinkDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.sb-status-text { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 2px; color: var(--accent); }
+
+.sb-nav { flex: 1; padding: 12px 14px; overflow-y: auto; }
+.sb-nav::-webkit-scrollbar { width: 3px; }
+.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.sb-section-lbl { font-family: 'DM Mono'; font-size: 0.55rem; letter-spacing: 3px; color: rgba(255,255,255,0.2); padding: 16px 8px 6px; text-transform: uppercase; }
+.sb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none; background: none;
+  color: rgba(255,255,255,0.38);
+  font-family: 'DM Mono';
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  width: 100%; text-align: left;
+  transition: all 0.22s;
+  margin-bottom: 2px;
+  position: relative;
+}
+.sb-item svg { width: 15px; height: 15px; stroke: currentColor; flex-shrink: 0; }
+.sb-item:hover { background: rgba(255,255,255,0.04); color: var(--fg); }
+.sb-item.active { background: rgba(0,229,180,0.08); color: var(--accent); border-left: 2px solid var(--accent); }
+.sb-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent); border-radius: 0 2px 2px 0; box-shadow: 0 0 8px var(--accent); }
+.sb-item .badge-count { margin-left: auto; background: rgba(0,229,180,0.15); border: 1px solid rgba(0,229,180,0.2); border-radius: 100px; padding: 1px 7px; font-size: 0.58rem; color: var(--accent); }
+.sb-item .badge-alert { margin-left: auto; background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.25); border-radius: 100px; padding: 1px 7px; font-size: 0.58rem; color: var(--red); }
+
+.sb-footer { padding: 14px 22px; border-top: 1px solid var(--line); }
+.sb-user-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sb-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, rgba(0,229,180,0.2), rgba(77,127,255,0.2)); border: 1px solid rgba(0,229,180,0.25); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 0.85rem; letter-spacing: 1px; color: var(--accent); }
+.sb-user-name { font-family: 'Syne'; font-size: 0.78rem; font-weight: 600; margin-bottom: 1px; }
+.sb-user-role { font-family: 'DM Mono'; font-size: 0.55rem; letter-spacing: 2px; color: rgba(255,255,255,0.3); }
+.sb-logout {
+  width: 100%;
+  background: none;
+  border: 1px solid rgba(255,77,109,0.2);
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  color: rgba(255,77,109,0.6);
+  font-family: 'DM Mono';
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.sb-logout:hover { background: rgba(255,77,109,0.07); color: var(--red); border-color: var(--red); box-shadow: 0 0 12px rgba(255,77,109,0.15); }
+.sb-logout svg { width: 12px; height: 12px; stroke: currentColor; }
+
+.sb-toggle {
+  display: none;
+  position: fixed;
+  top: 18px; left: 16px;
+  width: 40px; height: 40px;
+  background: rgba(14,18,25,0.95);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  z-index: 200;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.sb-toggle span { display: block; width: 18px; height: 1.5px; background: var(--fg); border-radius: 2px; transition: all 0.25s; }
+
+/* Main */
+.main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; position: relative; z-index: 1; }
+.topbar {
+  background: rgba(6,8,13,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  animation: fadeDown 0.5s ease both;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-title { font-family: 'Bebas Neue'; font-size: 1.05rem; letter-spacing: 4px; color: var(--fg); }
+.topbar-breadcrumb { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 2px; color: rgba(255,255,255,0.2); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-time { font-family: 'DM Mono'; font-size: 0.7rem; letter-spacing: 1.5px; color: rgba(255,255,255,0.25); min-width: 90px; }
+.topbar-date { font-family: 'DM Mono'; font-size: 0.6rem; letter-spacing: 1px; color: rgba(255,255,255,0.18); }
+.topbar-divider { width: 1px; height: 24px; background: var(--line); }
+.topbar-notif {
+  width: 36px; height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  transition: all 0.25s;
+  position: relative;
+}
+.topbar-notif:hover { border-color: var(--accent); color: var(--accent); }
+.topbar-notif svg { width: 15px; height: 15px; stroke: currentColor; }
+.notif-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; background: var(--red); border-radius: 50%; box-shadow: 0 0 6px var(--red); }
+.topbar-cta {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, var(--accent), #00c4a0);
+  color: #06080d;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-family: 'Bebas Neue';
+  font-size: 0.82rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(0,229,180,0.2);
+}
+.topbar-cta:hover { box-shadow: 0 6px 24px rgba(0,229,180,0.35); transform: translateY(-1px); }
+.topbar-cta svg { width: 13px; height: 13px; stroke: currentColor; }
+
+/* content */
+.view { padding: 32px 28px; animation: fadeUp 0.4s ease both; }
+.view-header { margin-bottom: 28px; }
+.view-header-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.view-title { font-family: 'Bebas Neue'; font-size: 2.2rem; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+.view-title span { color: var(--accent); }
+.view-sub { font-family: 'DM Mono'; font-size: 0.67rem; letter-spacing: 1px; color: rgba(255,255,255,0.3); }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; }
+.card-title { font-family: 'Bebas Neue'; font-size: 0.95rem; letter-spacing: 3px; display:flex; align-items:center; gap: 8px; }
+.card-badge { font-family: 'DM Mono'; font-size: 0.58rem; letter-spacing: 2px; border-radius: 100px; padding: 3px 10px; }
+.card-badge.live { background: rgba(0,229,180,0.08); border:1px solid rgba(0,229,180,0.2); color: var(--accent); }
+.card-badge.info { background: rgba(77,127,255,0.08); border:1px solid rgba(77,127,255,0.2); color: var(--blue); }
+.card-badge.warn { background: rgba(240,192,64,0.08); border:1px solid rgba(240,192,64,0.2); color: var(--gold); }
+
+.kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(175px,1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi { background: var(--card); border:1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; position: relative; overflow:hidden; }
+.kpi-val { font-family:'Bebas Neue'; font-size:2.6rem; letter-spacing:2px; line-height:1; margin-bottom:4px; }
+.kpi-lbl { font-family:'DM Mono'; font-size:0.6rem; letter-spacing:2px; color: rgba(255,255,255,0.35); margin-bottom:8px; }
+.kpi-glow { position:absolute; inset:0; opacity:0.0; pointer-events:none; }
+.kpi-accent-bar { position:absolute; bottom:0; left:0; right:0; height:2px; }
+
+.grid-2-1 { display:grid; grid-template-columns: 2fr 1fr; gap:16px; }
+@media(max-width:1200px){ .grid-2-1{ grid-template-columns:1fr; } }
+
+.queue-list { display:flex; flex-direction:column; gap:6px; }
+.queue-item { display:flex; align-items:center; gap:12px; padding: 12px 14px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.02); border:1px solid var(--line); }
+.queue-num { font-family:'Bebas Neue'; font-size:1.4rem; letter-spacing:1px; color: rgba(255,255,255,0.15); min-width:32px; }
+.queue-name { font-family:'Syne'; font-size:0.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.queue-meta { font-family:'DM Mono'; font-size:0.57rem; letter-spacing:1px; color: rgba(255,255,255,0.3); }
+.queue-stage { display:flex; align-items:center; gap:6px; }
+.queue-stage-dot { width:6px; height:6px; border-radius:50%; }
+.queue-stage-lbl { font-family:'DM Mono'; font-size:0.57rem; letter-spacing:1px; }
+
+.donut-wrapper { display:flex; align-items:center; gap:24px; }
+.donut-legend { flex:1; display:flex; flex-direction:column; gap:8px; }
+.donut-legend-item { display:flex; align-items:center; gap:8px; }
+.donut-legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.donut-legend-lbl { font-family:'DM Mono'; font-size:0.6rem; letter-spacing:1px; color: rgba(255,255,255,0.5); flex:1; }
+.donut-legend-val { font-family:'Bebas Neue'; font-size:0.9rem; letter-spacing:1px; }
+
+.toast { position: fixed; bottom:28px; right:28px; background: rgba(0,229,180,0.08); border:1px solid rgba(0,229,180,0.25); border-radius:10px; padding:14px 20px; font-family:'DM Mono'; font-size:0.7rem; letter-spacing:2px; color: var(--accent); opacity:0; transform: translateX(20px); transition: all 0.3s; pointer-events:none; z-index:500; box-shadow:0 8px 32px rgba(0,229,180,0.1); }
+.toast.show { opacity: 1; transform: translateX(0); }
+
+@media(max-width:900px) {
+  :root{ --sidebar-w: 0px; }
+  .sidebar{ transform: translateX(-260px); width:260px; }
+  .sidebar.open{ transform: translateX(0); }
+  .sb-toggle{ display:flex; }
+  .main{ margin-left: 0; }
+  .topbar{ padding: 0 16px 0 64px; }
+  .view{ padding: 24px 16px; }
+}
+
+@keyframes fadeUp{ from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);} }
+@keyframes fadeDown{ from{opacity:0; transform:translateY(-16px);} to{opacity:1; transform:translateY(0);} }
+
+</style>
+</head>
+<body>
+
+<button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M15 2l2 2-2 2"/><path d="M9 2L7 4l2 2"/>
+        </svg>
+      </div>
+      <div><div class="sb-name">SMARTCONVO</div></div>
+    </div>
+    <div class="sb-tagline">AI COMMAND CENTER v2.4.1</div>
+    <div class="sb-badges">
+      <span class="sb-badge admin">ADMIN</span>
+      <span class="sb-badge live">● LIVE</span>
+    </div>
+  </div>
+
+  <div class="sb-status-row">
+    <div class="sb-status-dot"></div>
+    <div class="sb-status-text">ALL SYSTEMS OPERATIONAL</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-lbl">Command</div>
+    <button class="sb-item" onclick="location.href='admin.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      AI Command Center
+    </button>
+
+    <div class="sb-section-lbl">Convocation</div>
+    <button class="sb-item active" onclick="location.href='admin-live-monitoring.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+      Live Monitoring
+      <span class="badge-count">LIVE</span>
+    </button>
+    <button class="sb-item" onclick="location.href='admin-queue-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Queue Management
+    </button>
+    <button class="sb-item" onclick="location.href='admin-face-verification.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 1 1 6 0c0 1.5-1.5 2.5-3 3v2"/><circle cx="12" cy="20" r="0.5" fill="currentColor"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>
+      Face Verification
+      <span class="badge-alert">14</span>
+    </button>
+
+    <div class="sb-section-lbl">Management</div>
+    <button class="sb-item" onclick="location.href='admin-student-registry.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Student Registry
+    </button>
+    <button class="sb-item" onclick="location.href='admin-submissions.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Submissions
+      <span class="badge-count">13</span>
+    </button>
+    <button class="sb-item" onclick="location.href='admin-studentmanagement.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
+      Nominees & Awards
+    </button>
+
+    <div class="sb-section-lbl">Intelligence</div>
+    <button class="sb-item" onclick="location.href='admin-analytics-reports.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics & Reports
+    </button>
+    <button class="sb-item" onclick="location.href='admin-award-catagory.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>
+      Award Categories
+    </button>
+
+    <div class="sb-section-lbl">Settings</div>
+    <button class="sb-item" onclick="location.href='admin-settings.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V22a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 20.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09A1.65 1.65 0 0 0 19.4 15z"/></svg>
+      Settings
+    </button>
+
+    <button class="sb-item" onclick="location.href='admin-course-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V4.5A2.5 2.5 0 0 1 6.5 2H20"/><path d="M20 2v17l-6-3-6 3V2"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>
+      Course Management
+    </button>
+
+    <button class="sb-item" onclick="location.href='admin-voting-management.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7"/></svg>
+      Voting Management
+    </button>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-user-row">
+      <div class="sb-avatar" id="sb-avatar">AD</div>
+      <div>
+        <div class="sb-user-name" id="sb-user">Admin</div>
+        <div class="sb-user-role">SYSTEM ADMINISTRATOR</div>
+      </div>
+    </div>
+    <button class="sb-logout" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      SIGN OUT
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title" id="topbar-title">AI COMMAND CENTER</span>
+      <span class="topbar-breadcrumb" id="topbar-breadcrumb">SMARTCONVO / LIVE MONITORING</span>
+    </div>
+    <div class="topbar-right">
+      <div style="text-align:right">
+        <div class="topbar-time" id="topbar-time"></div>
+        <div class="topbar-date" id="topbar-date"></div>
+      </div>
+      <div class="topbar-divider"></div>
+      <button class="topbar-notif" onclick="showToast('No new critical alerts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </button>
+      <button class="topbar-cta" onclick="showToast('Add Nominee (demo)')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        ADD NOMINEE
+      </button>
+    </div>
+  </header>
+
+  <section class="view">
+    <div class="view-header">
+
+      <div class="view-header-row">
+        <div>
+          <h1 class="view-title">Live <span>Monitoring</span></h1>
+          <p class="view-sub">Real-time convocation ceremony tracking and hall management</p>
+        </div>
+        <span class="card-badge live" style="font-size:0.7rem;padding:6px 16px">● CEREMONY IN PROGRESS</span>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-glow" style="background:rgba(0,229,180,0.12)"></div><div class="kpi-val" style="color:var(--accent)">42</div><div class="kpi-lbl">GRADUATED TODAY</div><div class="kpi-accent-bar" style="background:linear-gradient(90deg,var(--accent),rgba(0,229,180,0.3))"></div></div>
+      <div class="kpi"><div class="kpi-glow" style="background:rgba(240,192,64,0.12)"></div><div class="kpi-val" style="color:var(--gold)">28</div><div class="kpi-lbl">IN QUEUE</div><div class="kpi-accent-bar" style="background:linear-gradient(90deg,var(--gold),rgba(240,192,64,0.3))"></div></div>
+      <div class="kpi"><div class="kpi-glow" style="background:rgba(77,127,255,0.12)"></div><div class="kpi-val" style="color:var(--blue)">277</div><div class="kpi-lbl">AWAITING</div><div class="kpi-accent-bar" style="background:linear-gradient(90deg,var(--blue),rgba(77,127,255,0.3))"></div></div>
+      <div class="kpi"><div class="kpi-glow" style="background:rgba(255,77,109,0.12)"></div><div class="kpi-val" style="color:var(--red)">5</div><div class="kpi-lbl">ABSENT / DEFER</div><div class="kpi-accent-bar" style="background:linear-gradient(90deg,var(--red),rgba(255,77,109,0.3))"></div></div>
+    </div>
+
+    <div class="grid-2-1">
+      <div class="card" style="padding:16px">
+        <div class="card-header" style="margin-bottom:14px">
+          <div class="card-title">CAMERA LIVE</div>
+          <span class="card-badge live" id="camera-live-badge">AWAITING</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns: 1fr;gap:10px;align-items:start">
+          <div style="position:relative;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+            <video id="camera-video" autoplay playsinline muted style="width:100%;height:auto;display:block;background:#000"></video>
+            <div id="camera-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px">
+              <div style="font-family:'DM Mono';font-size:0.72rem;letter-spacing:1px;color:rgba(255,255,255,0.55);line-height:1.6">
+                Tap “Start Camera”<br/>untuk paparan dari camera hardware laptop.
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="sb-item" style="width:auto" onclick="startCamera()">START CAMERA</button>
+            <button class="sb-item" style="width:auto" onclick="stopCamera()">STOP</button>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.01)">
+              <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:2px;color:rgba(255,255,255,0.35);margin-bottom:8px">AI DETECT STATUS</div>
+              <div id="camera-detect-line" style="font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:2px;color:var(--accent)">STANDBY</div>
+              <div id="camera-detect-sub" style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.5">
+                Admin akan pantau dan set step pelajar beratur.
+              </div>
+            </div>
+
+            <div style="flex:1;min-width:220px;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.01)">
+              <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:2px;color:rgba(255,255,255,0.35);margin-bottom:8px">DECISION BUTTON</div>
+              <button id="btn-admin-decision" class="topbar-cta" style="width:100%;justify-content:center" onclick="adminDecide()">
+                DECIDE (NEXT GRADUATE)
+              </button>
+
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+                <button class="topbar-cta" style="width:auto;padding:9px 16px" onclick="adminGraduateNext()">GRADUAN SELESAI NAIK PENTAS</button>
+                <button class="topbar-cta" style="width:auto;padding:9px 16px" onclick="adminDecide()">NEXT GRADUATE</button>
+              </div>
+
+              <div id="camera-last-decision" style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-top:8px;line-height:1.5">—</div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">NEXT IN QUEUE</div>
+          <span class="card-badge live">LIVE ORDER</span>
+        </div>
+        <div class="queue-list" id="queue-list-live"></div>
+      </div>
+    </div>
+
+    <div class="grid-2-1" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">COURSE BREAKDOWN</div>
+          <span class="card-badge info">TODAY</span>
+        </div>
+        <div class="donut-wrapper">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--accent)" stroke-width="16" stroke-dasharray="120 181.7" stroke-dashoffset="0" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--blue)" stroke-width="16" stroke-dasharray="80 181.7" stroke-dashoffset="-120" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--gold)" stroke-width="16" stroke-dasharray="50 181.7" stroke-dashoffset="-200" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--purple)" stroke-width="16" stroke-dasharray="35 181.7" stroke-dashoffset="-250" stroke-linecap="round"/>
+            <text x="60" y="56" text-anchor="middle" fill="var(--fg)" font-family="'Bebas Neue'" font-size="20" letter-spacing="1">347</text>
+            <text x="60" y="70" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-family="'DM Mono'" font-size="7" letter-spacing="2">TOTAL</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--accent)"></div><span class="donut-legend-lbl">Computer Science</span><span class="donut-legend-val" style="color:var(--accent)">120</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--blue)"></div><span class="donut-legend-lbl">Electrical & Comp.</span><span class="donut-legend-val" style="color:var(--blue)">85</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--gold)"></div><span class="donut-legend-lbl">Info. Systems</span><span class="donut-legend-val" style="color:var(--gold)">75</span></div>
+            <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--purple)"></div><span class="donut-legend-lbl">Data Science</span><span class="donut-legend-val" style="color:var(--purple)">67</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">COURSE ACTIVE FEED</div>
+          <span class="card-badge warn">STATUS LIVE</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap" id="course-active-feed"></div>
+      </div>
+    </div>
+
+
+
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <div class="card-title">NOTE</div>
+        <span class="card-badge info">ADMIN</span>
+      </div>
+      <p style="font-family:'DM Mono';font-size:0.72rem;letter-spacing:1px;color:rgba(255,255,255,0.45);line-height:1.6;">
+        Untuk simpan & update data ikut course pelajar berbeza, sambungan API perlu dibuat pada bahagian backend.
+        Page ini siap UI dan struktur—data demo dipaparkan dari array JS.
+      </p>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="sb-item" style="width:auto" onclick="showToast('Refresh live feed (demo)')">REFRESH LIVE FEED</button>
+        <button class="sb-item" style="width:auto" onclick="showToast('Export report (demo)')">EXPORT REPORT</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+
+const userName = localStorage.getItem('userName') || 'Admin';
+document.getElementById('sb-user').textContent = userName;
+const initials = userName.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || 'AD';
+document.getElementById('sb-avatar').textContent = initials;
+
+function updateTime(){
+  const now = new Date();
+  const el = document.getElementById('topbar-time');
+  const de = document.getElementById('topbar-date');
+  if(el) el.textContent = now.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(de) de.textContent = now.toLocaleDateString('en-MY',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+}
+setInterval(updateTime,1000); updateTime();
+
+// stage meaning for this page UI:
+// - queue: belum scan muka
+// - in_scan: admin letakkan mereka sedang verify face
+// - stage: dah confirm verify face -> naik pentas
+// (Demo sahaja buat masa sekarang; backend boleh sambung nanti)
+const queueData = [
+  { num:43, name:'Danish Shazwan Bin Suwandi', id:'2402076', prog:'CS (DS)', stage:'stage', stageColor:'#00e5b4', faceVerified:true },
+  { num:44, name:'Iskandar Zulkarnain', id:'2402077', prog:'CS (DS)', stage:'in_scan', stageColor:'#4d7fff', faceVerified:false },
+  { num:45, name:'Lily Liyana Lorraine', id:'2402078', prog:'CS', stage:'stage', stageColor:'#00e5b4', faceVerified:true },
+  { num:46, name:'Mior Muhammad Ikmal', id:'2402079', prog:'IS', stage:'queue', stageColor:'#f0c040', faceVerified:false },
+  { num:47, name:'Muhammad Ammar', id:'2402080', prog:'CS', stage:'in_scan', stageColor:'#4d7fff', faceVerified:false },
+  { num:48, name:'Nur Adilah', id:'2402084', prog:'EC', stage:'queue', stageColor:'#f0c040', faceVerified:false },
+  { num:49, name:'Nursyazwanie', id:'2402088', prog:'IS', stage:'queue', stageColor:'#f0c040', faceVerified:false },
+];
+
+function buildQueueList(){
+  const el = document.getElementById('queue-list-live');
+  if(!el) return;
+  el.innerHTML='';
+  queueData.slice(0,7).forEach((q,i)=>{
+    el.innerHTML += `
+      <div class="queue-item">
+        <div class="queue-num">${q.num}</div>
+        <div style="flex:1;min-width:0">
+          <div class="queue-name">${q.name}</div>
+          <div class="queue-meta">${q.id} · ${q.prog}</div>
+        </div>
+          <div class="queue-stage">
+          <div class="queue-stage-dot" style="background:${q.stageColor};box-shadow:0 0 6px ${q.stageColor}"></div>
+          <span class="queue-stage-lbl" style="color:${q.stageColor}">${stageLabel(q.stage, q.faceVerified)}</span>
+        </div>
+      </div>
+    `;
+  });
+}
+buildQueueList();
+
+const courses = [
+  'Certificate in Mechanical Engineering Technology (Design Drafting)',
+  'Certificate in Building Engineering Technology',
+  'Certificate in Foundry Technology',
+  'Certificate in Architecture',
+  'Diploma in Water Service Technology',
+  'Diploma in Computer Technology (Big Data Analytics)',
+  'Diploma in Engineering Technology — Smart Manufacturing',
+  'Diploma in Contemporary Furniture Production Technology',
+  'Diploma in Welding Competency',
+  'Diploma in Electrical High Voltage Charman Competency (A4)',
+  'Diploma in Electrical Competency (Domestic & Industrial) PW4',
+  'Diploma in Automotive Technology',
+  'Diploma in Automotive Technology — Vehicle Body Repair & Finishing'
+];
+
+const colors = ['var(--accent)','var(--blue)','var(--gold)','var(--purple)','var(--red)','var(--accent2)'];
+
+function buildCourseActiveFeed(){
+  const el = document.getElementById('course-active-feed');
+  if(!el) return;
+  el.innerHTML='';
+  courses.forEach((c,i)=>{
+    const color = colors[i%colors.length];
+    const total = 8 + (i%7)*3;
+    const waiting = 2 + (i%5);
+    el.innerHTML += `
+      <div style="flex:1;min-width:220px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.01)">
+        <div style="font-family:'DM Mono';font-size:0.58rem;letter-spacing:2px;color:rgba(255,255,255,0.35);margin-bottom:10px">COURSE</div>
+        <div style="font-family:'Syne';font-weight:800;font-size:0.9rem;margin-bottom:8px;line-height:1.25">${c}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:1px;color:rgba(255,255,255,0.35)">TOTAL: <span style="color:${color};font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:1px">${total}</span></div>
+          <div style="font-family:'DM Mono';font-size:0.6rem;letter-spacing:1px;color:rgba(255,255,255,0.35)">WAITING: <span style="color:${color};font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:1px">${waiting}</span></div>
+        </div>
+      </div>
+    `;
+  });
+}
+buildCourseActiveFeed();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function logout(){
+  if(confirm('Sign out of SMARTCONVO Command Center?')){
+    localStorage.clear();
+    window.location.href='index.html';
+  }
+}
+
+// ---------------- Camera (hardware laptop) ----------------
+let __cameraStream = null;
+function startCamera(){
+  const video = document.getElementById('camera-video');
+  const overlay = document.getElementById('camera-overlay');
+  const badge = document.getElementById('camera-live-badge');
+  if(!video) return;
+
+  if(__cameraStream){
+    try{ __cameraStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    __cameraStream = null;
+  }
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    if(badge) badge.textContent = 'NOT SUPPORTED';
+    if(overlay) overlay.innerHTML = "Your browser doesn't support camera APIs.";
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then((stream)=>{
+      __cameraStream = stream;
+      video.srcObject = stream;
+      video.play().catch(()=>{});
+      if(overlay) overlay.style.display = 'none';
+      if(badge) badge.textContent = 'LIVE';
+
+      const line = document.getElementById('camera-detect-line');
+      if(line) line.textContent = 'SCANNING...';
+
+      // DEMO AI detection: update detect status based on queue simulation
+      // Real face detection must be implemented via backend/AI service.
+    })
+    .catch((err)=>{
+      console.error(err);
+      if(badge) badge.textContent = 'CAMERA BLOCKED';
+      if(overlay) overlay.innerHTML = "Camera permission denied or device not found.<br/>Check browser settings & try again.";
+      const line = document.getElementById('camera-detect-line');
+      if(line) line.textContent = 'STANDBY';
+    });
+}
+
+function stopCamera(){
+  const video = document.getElementById('camera-video');
+  const overlay = document.getElementById('camera-overlay');
+  const badge = document.getElementById('camera-live-badge');
+  if(__cameraStream){
+    try{ __cameraStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    __cameraStream = null;
+  }
+  if(video) video.srcObject = null;
+  if(overlay) overlay.style.display = 'flex';
+  if(badge) badge.textContent = 'AWAITING';
+  const line = document.getElementById('camera-detect-line');
+  if(line) line.textContent = 'STANDBY';
+}
+
+function stageLabel(stage, faceVerified){
+  if(stage === 'queue') return 'IN QUEUE';
+  if(stage === 'in_scan') return 'VERIFY FACE';
+  if(stage === 'stage') return faceVerified ? 'STAGE (READY)' : 'STAGE (PENDING)';
+  if(stage === 'onstage') return 'ON STAGE';
+  if(stage === 'finished') return 'FINISHED';
+  return String(stage).toUpperCase();
+}
+
+function stageDotColor(stage){
+  if(stage === 'queue') return '#f0c040';
+  if(stage === 'in_scan') return '#4d7fff';
+  if(stage === 'stage') return '#00e5b4';
+  if(stage === 'onstage') return '#00b8ff';
+  if(stage === 'finished') return '#00e5b4';
+  return '#ffffff';
+}
+
+function adminDecide(){
+  // Move next in scan to stage/verified (demo)
+
+  const last = document.getElementById('camera-last-decision');
+  const line = document.getElementById('camera-detect-line');
+  if(last) last.textContent = `NEXT GRADUATE · ${new Date().toLocaleTimeString('en-MY')}`;
+  if(line) line.textContent = 'UPDATING...';
+
+  // Requirement:
+  // - Data yang belum scan muka kekal: in queue
+  // - Tekan NEXT GRADUATE: pilih graduan yang sedang scan muka (in_scan)
+  // - Bila verify face berjaya (demo = faceVerified=true) => move terus ke stage
+
+  // 1) Find a candidate currently in_scan
+  let candidate = queueData.find(q => q.stage === 'in_scan');
+
+  // 2) If no in_scan, move someone from queue to in_scan (simulate admin starting scan)
+  if(!candidate){
+    candidate = queueData.find(q => q.stage === 'queue') || queueData[0];
+    if(candidate && candidate.stage === 'queue') candidate.stage = 'in_scan';
+  }
+
+  if(candidate){
+    // Simulate verify result based on faceVerified
+    if(candidate.faceVerified){
+      candidate.stage = 'stage';
+      candidate.stageColor = stageDotColor('stage');
+    } else {
+      // Not verified yet: keep them in_scan (still under verification)
+      candidate.stage = 'in_scan';
+      candidate.stageColor = stageDotColor('in_scan');
+    }
+    candidate.stageColor = stageDotColor(candidate.stage);
+  }
+
+  // update UI
+  buildQueueList();
+  setTimeout(()=>{ if(line) line.textContent = 'READY FOR NEXT'; }, 800);
+}
+
+function adminGraduateNext(){
+  // Move current onstage -> finished
+  // Then move next verified (stage) -> onstage
+
+  const last = document.getElementById('camera-last-decision');
+  const line = document.getElementById('camera-detect-line');
+  if(last) last.textContent = `Graduan selesai · ${new Date().toLocaleTimeString('en-MY')}`;
+  if(line) line.textContent = 'UPDATING...';
+
+  // Flow:
+  // - Mark current onstage/ stage as finished
+  // - Move next READY stage -> onstage
+
+  const current = queueData.find(q => q.stage === 'onstage');
+  if(current){
+    current.stage = 'finished';
+    current.stageColor = stageDotColor('finished');
+  }
+
+  // If no one onstage, pick next stage as onstage
+  const nextReady = queueData.find(q => q.stage === 'stage');
+  if(nextReady){
+    nextReady.stage = 'onstage';
+    nextReady.stageColor = stageDotColor('onstage');
+  }
+
+  buildQueueList();
+  setTimeout(()=>{ if(line) line.textContent = 'READY FOR NEXT'; }, 800);
+}
+</script>
+</body>
+</html>
+

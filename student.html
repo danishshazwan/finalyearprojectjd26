@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #00e5b4;
+  --accent2: #2B2BFF;
+  --gold: #f0c040;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.55);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-y:auto; }
+
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0.025; pointer-events:none; z-index:9999;
+}
+
+/* NAV */
+nav {
+  position:sticky; top:0; z-index:100;
+  background:rgba(6,8,11,0.85); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);
+  padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:64px;
+  animation:fadeDown 0.6s ease both;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; }
+.nav-brand svg { width:24px; height:24px; color:var(--accent); }
+.nav-brand span { font-family:'Bebas Neue'; font-size:1.3rem; letter-spacing:5px; }
+.nav-tabs { display:flex; gap:4px; }
+.nav-tab { background:none; border:none; padding:8px 16px; font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; color:rgba(255,255,255,0.4); cursor:pointer; border-radius:6px; transition:all 0.3s; }
+.nav-tab:hover { color:var(--fg); background:rgba(255,255,255,0.05); }
+.nav-tab.active { color:var(--accent); background:rgba(0,229,180,0.08); }
+.nav-right { display:flex; align-items:center; gap:12px; }
+.nav-badge { background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.25); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:var(--accent); }
+.nav-user { font-family:'DM Mono'; font-size:0.7rem; letter-spacing:1px; color:var(--dim); display:none; }
+@media(min-width:768px){ .nav-user{display:block} }
+.nav-logout { background:none; border:1px solid var(--line); border-radius:6px; padding:6px 14px; color:rgba(255,255,255,0.4); font-family:'DM Mono'; font-size:0.68rem; letter-spacing:2px; cursor:pointer; transition:all 0.3s; }
+.nav-logout:hover { border-color:var(--accent); color:var(--accent); }
+
+/* VIEWS */
+.view { display:none; }
+.view.active { display:block; }
+
+/* Icon tiles / subtle UI polish (theme-safe) */
+.icon-tile{
+  width:44px; height:44px;
+  border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,229,180,0.08);
+  color:var(--accent);
+  transition:transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  border:1px solid rgba(0,229,180,0.18);
+  box-shadow:0 10px 30px rgba(0,229,180,0.06);
+}
+.icon-tile:hover{ transform:translateY(-2px) scale(1.02); background:rgba(0,229,180,0.12); }
+.soft-anim{ animation:fadeUp 0.5s ease both; }
+
+@media (prefers-reduced-motion: reduce){
+  .pulse{ animation:none !important; }
+  html{ scroll-behavior:auto; }
+  .hover-lift:hover{ transform:none; }
+  .icon-tile{ transition:none; }
+}
+
+
+/* DASHBOARD */
+.dash-hero {
+  padding:80px 32px 60px; max-width:1200px; margin:0 auto;
+  display:grid; grid-template-columns:1fr auto; gap:40px; align-items:center;
+}
+
+/* Small dashboard helpers (theme-safe) */
+.pulse { animation:pulseGlow 1.6s ease-in-out infinite; }
+@keyframes pulseGlow { 0%,100%{ transform:scale(1); opacity:0.9 } 50%{ transform:scale(1.04); opacity:1 } }
+
+.hover-lift { transition:transform 0.25s ease, border-color 0.25s ease, background 0.25s ease; }
+.hover-lift:hover { transform:translateY(-2px); border-color:rgba(0,229,180,0.35); background:rgba(0,229,180,0.05); }
+
+.notif-list { display:flex; flex-direction:column; gap:10px; }
+.notif-item { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 16px; display:flex; gap:12px; align-items:flex-start; animation:fadeUp 0.4s ease both; }
+.notif-ico { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,180,0.08); color:var(--accent); font-family:'DM Mono'; }
+.notif-body { min-width:0; }
+.notif-title { font-family:'Syne'; font-weight:700; font-size:0.95rem; margin-bottom:4px; }
+.notif-text { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.45); line-height:1.6; }
+.notif-meta { margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+
+.live-pill { background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.25); color:var(--accent); border-radius:100px; padding:4px 12px; font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; display:inline-flex; align-items:center; gap:8px; }
+.live-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(0,229,180,0.08); }
+
+/* Dashboard sections */
+.dash-top-strip { padding:0 32px 12px; max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.dash-welcome { display:flex; align-items:center; gap:14px; }
+.dash-welcome-icon { width:44px; height:44px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,180,0.08); color:var(--accent); font-size:1.1rem; }
+.dash-welcome-title { font-family:'Bebas Neue'; letter-spacing:3px; font-size:clamp(1.4rem,3vw,2rem); }
+.dash-welcome-sub { font-family:'DM Mono'; letter-spacing:1px; font-size:0.65rem; color:rgba(255,255,255,0.45); margin-top:4px; }
+
+@media(max-width:768px){ .dash-hero{grid-template-columns:1fr;} }
+.dash-greeting { animation:fadeUp 0.5s 0.1s ease both; }
+.dash-eyebrow { font-family:'DM Mono'; font-size:0.72rem; letter-spacing:4px; color:var(--accent); margin-bottom:12px; }
+.dash-title { font-family:'Bebas Neue'; font-size:clamp(2.5rem,5vw,4rem); letter-spacing:3px; line-height:1; margin-bottom:12px; }
+.dash-sub { font-size:0.9rem; color:var(--dim); line-height:1.7; }
+.dash-id-card {
+  background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px 28px;
+  text-align:right; animation:fadeUp 0.5s 0.2s ease both;
+}
+.id-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:3px; color:rgba(255,255,255,0.3); margin-bottom:6px; }
+.id-val { font-family:'Bebas Neue'; font-size:1.8rem; letter-spacing:3px; color:var(--accent); }
+.id-email { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.4); margin-top:4px; }
+
+.stats-row {
+  padding:0 32px 60px; max-width:1200px; margin:0 auto;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px;
+  animation:fadeUp 0.5s 0.3s ease both;
+}
+.stat-card {
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:20px 22px; position:relative; overflow:hidden;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:var(--accent); opacity:0.6;
+}
+.stat-card-val { font-family:'Bebas Neue'; font-size:2.2rem; letter-spacing:2px; color:var(--accent); line-height:1; margin-bottom:4px; }
+.stat-card-lbl { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:rgba(255,255,255,0.4); }
+
+.section { padding:0 32px 80px; max-width:1200px; margin:0 auto; }
+.section-title { font-family:'Bebas Neue'; font-size:1.8rem; letter-spacing:3px; margin-bottom:28px; }
+.section-title span { color:var(--accent); }
+.divider { border:none; border-top:1px solid var(--line); margin:0 32px 60px; }
+
+/* SUBMISSION FORM */
+.submit-page { padding:60px 32px; max-width:800px; margin:0 auto; }
+.page-title { font-family:'Bebas Neue'; font-size:clamp(2rem,4vw,3rem); letter-spacing:3px; margin-bottom:8px; animation:fadeUp 0.5s ease both; }
+.page-title span { color:var(--accent); }
+.page-sub { font-size:0.9rem; color:var(--dim); margin-bottom:48px; animation:fadeUp 0.5s 0.1s ease both; }
+
+.form-card {
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  padding:40px; animation:fadeUp 0.5s 0.2s ease both;
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media(max-width:600px){ .form-row{grid-template-columns:1fr;} }
+.form-group { margin-bottom:24px; }
+.form-label { display:block; font-family:'Bebas Neue'; font-size:0.8rem; letter-spacing:3px; color:rgba(255,255,255,0.7); margin-bottom:10px; }
+.input-wrap { position:relative; }
+.input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:rgba(255,255,255,0.25); pointer-events:none; }
+.form-input, .form-select, .form-textarea {
+  width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+  padding:14px 16px 14px 42px; color:var(--fg); font-family:'DM Mono'; font-size:0.82rem; letter-spacing:1px; outline:none; transition:all 0.3s;
+}
+.form-textarea { padding:14px 16px; min-height:120px; resize:vertical; font-family:'Syne'; font-size:0.85rem; }
+.form-select { appearance:none; padding-right:40px; }
+.form-input::placeholder, .form-textarea::placeholder { color:rgba(255,255,255,0.2); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); background:rgba(0,229,180,0.04); }
+.form-select option { background:#06080b; }
+
+.upload-zone {
+  border:2px dashed rgba(255,255,255,0.15); border-radius:10px; padding:40px;
+  text-align:center; cursor:pointer; transition:all 0.3s;
+}
+.upload-zone:hover { border-color:var(--accent); background:rgba(0,229,180,0.03); }
+.upload-zone svg { width:36px; height:36px; stroke:rgba(255,255,255,0.2); margin-bottom:12px; }
+.upload-title { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:2px; color:rgba(255,255,255,0.4); margin-bottom:6px; }
+.upload-sub { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+.submit-btn {
+  width:100%; background:var(--accent); color:#06080b; border:none; border-radius:10px;
+  padding:18px; font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:4px;
+  cursor:pointer; margin-top:8px; transition:all 0.3s;
+}
+.submit-btn:hover { background:#fff; transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,229,180,0.25); }
+.submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+/* RESULTS view — progress bars */
+.results-page { padding:60px 32px; max-width:1000px; margin:0 auto; }
+.result-card {
+  background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:28px; margin-bottom:12px; animation:fadeUp 0.4s ease both;
+}
+.result-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; }
+.result-title { font-family:'Syne'; font-weight:700; font-size:1rem; margin-bottom:4px; }
+.result-cat { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:2px; color:var(--accent); }
+.result-score { text-align:right; }
+.result-score-val { font-family:'Bebas Neue'; font-size:1.8rem; letter-spacing:2px; color:var(--accent); line-height:1; }
+.result-score-lbl { font-family:'DM Mono'; font-size:0.6rem; letter-spacing:2px; color:rgba(255,255,255,0.3); }
+.progress-bar-wrap { height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+.progress-bar { height:100%; background:var(--accent); border-radius:2px; transition:width 1s ease; width:0; }
+.result-meta { display:flex; gap:16px; margin-top:12px; }
+.result-tag { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:1px; color:rgba(255,255,255,0.3); }
+
+/* status badge */
+.status-pill { border-radius:100px; padding:3px 12px; font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; display:inline-block; }
+.status-pending { background:rgba(240,192,64,0.1); border:1px solid rgba(240,192,64,0.3); color:var(--gold); }
+.status-approved { background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.3); color:var(--accent); }
+.status-review { background:rgba(43,43,255,0.15); border:1px solid rgba(43,43,255,0.4); color:#7b8fff; }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:rgba(0,229,180,0.1); border:1px solid rgba(0,229,180,0.3);
+  border-radius:10px; padding:14px 24px;
+  font-family:'DM Mono'; font-size:0.75rem; letter-spacing:2px; color:var(--accent);
+  opacity:0; transition:all 0.4s; pointer-events:none; z-index:1000; white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+footer { border-top:1px solid var(--line); padding:40px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+.footer-brand { display:flex; align-items:center; gap:10px; }
+.footer-brand svg { width:20px; height:20px; color:var(--accent); }
+.footer-brand span { font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:5px; color:rgba(255,255,255,0.6); }
+.footer-copy { font-family:'DM Mono'; font-size:0.65rem; letter-spacing:1px; color:rgba(255,255,255,0.25); }
+
+/* STUDENT SIDEBAR */
+html { scroll-behavior: smooth; }
+.layout { display:flex; min-height: calc(100vh - 64px); }
+.sidebar {
+  width:260px;
+  flex-shrink:0;
+  border-right:1px solid var(--line);
+  background:rgba(255,255,255,0.01);
+  padding:28px 18px;
+  position:sticky;
+  top:64px;
+  height:calc(100vh - 64px);
+  overflow-y:auto;
+}
+.main { flex:1; min-height:100vh; overflow-y:auto; }
+
+.sb-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding:0 8px; }
+.sb-brand-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(0,229,180,0.08); }
+.sb-brand-title { font-family:'Bebas Neue'; letter-spacing:4px; font-size:1.4rem; color:rgba(255,255,255,0.65); }
+
+.sb-section { display:flex; flex-direction:column; gap:10px; padding:0 8px; }
+.sb-link {
+  width:100%;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+  color:var(--fg);
+  border-radius:12px;
+  padding:12px 12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:all 0.3s;
+}
+.sb-link:hover { border-color:rgba(0,229,180,0.35); background:rgba(0,229,180,0.06); transform:translateX(4px); }
+.sb-icon { width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(0,229,180,0.08); color:var(--accent); font-family:'DM Mono'; font-size:0.85rem; }
+.sb-text { font-family:'DM Mono'; font-size:0.75rem; letter-spacing:1px; color:rgba(255,255,255,0.72); }
+
+.sb-footer { margin-top:28px; border-top:1px solid var(--line); padding-top:18px; padding-left:8px; padding-right:8px; }
+.sb-footer-label { font-family:'DM Mono'; font-size:0.62rem; letter-spacing:2px; color:rgba(255,255,255,0.35); margin-bottom:8px; }
+.sb-footer-name { font-family:'Bebas Neue'; font-size:1.15rem; letter-spacing:3px; color:var(--accent); }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { width:100%; position:relative; top:auto; height:auto; border-right:none; border-bottom:1px solid var(--line); }
+  .main { min-height:auto; }
+}
+
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+  <!-- <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('dashboard',this)">Dashboard</button>
+    <button class="nav-tab" onclick="showView('submit',this)">Submit Project</button>
+    <button class="nav-tab" onclick="showView('results',this)">My Results</button>
+  </div> -->
+  <div class="nav-right">
+    <span class="nav-badge">STUDENT</span>
+    <span class="nav-user" id="nav-user">—</span>
+    <button class="nav-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- SIDE MENU LAYOUT (added) -->
+<div class="layout">
+  <aside class="sidebar" aria-label="Student Sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-dot" aria-hidden="true"></div>
+      <div class="sb-brand-title">Menu</div>
+    </div>
+
+    <div class="sb-section">
+<button class="sb-link" type="button" onclick="window.location.href='student.html'"style="border-color: rgba(0,229,180,0.35); background: rgba(0,229,180,0.06);">
+        <span class="sb-icon" aria-hidden="true">🏛️</span>
+        <span class="sb-text">Student Portal</span>
+      </button>
+
+      <button class="sb-link" type="button" data-active="true" onclick="window.location.href='studentprofile.html'">
+        <span class="sb-icon" aria-hidden="true">👤</span>
+        <span class="sb-text">Profile Student</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-updatedata.html'">
+        <span class="sb-icon" aria-hidden="true">✎</span>
+        <span class="sb-text">Update Data</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-verifyface.html'">
+        <span class="sb-icon" aria-hidden="true">🧠</span>
+        <span class="sb-text">Verify Face</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-uploadachievement.html'">
+        <span class="sb-icon" aria-hidden="true">🏆</span>
+        <span class="sb-text">Upload Achievement</span>
+      </button>
+
+      <button class="sb-link" type="button" onclick="window.location.href='student-queue-status.html'">
+        <span class="sb-icon" aria-hidden="true">#</span>
+        <span class="sb-text">Queue Number</span>
+      </button>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-label">Logged in as</div>
+      <div class="sb-footer-name" id="sb-footer-name">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+<!-- DASHBOARD VIEW -->
+<div class="dash-top-strip">
+  <div class="dash-welcome" aria-label="Welcome to Student Portal">
+    <div class="dash-welcome-icon" aria-hidden="true">🎓</div>
+    <div>
+      <div class="dash-welcome-title">Welcome to SMARTCONVO Student Portal</div>
+      <div class="dash-welcome-sub">Graduation updates • AI verification • Queue tracking • Events</div>
+    </div>
+  </div>
+  <div class="live-pill pulse" aria-label="Live queue status">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span>Live Queue</span>
+    <span style="color:rgba(255,255,255,0.65);font-family:'DM Mono';font-size:0.62rem;letter-spacing:1px;">•</span>
+    <span>Your #<span id="live-queue-number">—</span></span>
+  </div>
+</div>
+
+<div id="view-dashboard" class="view active">
+  <div class="dash-hero">
+    <div class="dash-greeting">
+      <p class="dash-eyebrow">Dean's Award Ceremony 2026</p>
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+      <h1 class="dash-title" id="dash-title">Hello, Student</h1>
+      <div style="font-family:'DM Mono';font-size:0.68rem;letter-spacing:2px;color:rgba(255,255,255,0.45);padding-bottom:12px;">
+        Student Portal
+      </div>
+    </div>
+      <p class="dash-sub">Your portal for award submissions, results tracking, and ceremony information.</p>
+    </div>
+    <div class="dash-id-card">
+      <div class="id-label">Student ID</div>
+      <div class="id-val" id="id-val">—</div>
+      <div class="id-email" id="id-email">—</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card-val">1</div>
+      <div class="stat-card-lbl">Submission</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val" style="color:var(--gold)">3</div>
+      <div class="stat-card-lbl">Days to Ceremony</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val">12</div>
+      <div class="stat-card-lbl">Categories Open</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val">87%</div>
+      <div class="stat-card-lbl">Profile Complete</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="dash-top-strip" style="padding-top:0;">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <h2 class="section-title" style="margin:0;">Important <span>Announcements</span></h2>
+      </div>
+      <div class="live-pill" style="margin-left:auto;background:rgba(240,192,64,0.08);border-color:rgba(240,192,64,0.25);color:var(--gold);">
+        <span class="live-dot" aria-hidden="true" style="background:var(--gold);box-shadow:0 0 0 6px rgba(240,192,64,0.08);"></span>
+        <span>For You</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0;">
+    <div class="notif-list" id="notif-list">
+      <div class="notif-item hover-lift" data-notif="true">
+        <div class="notif-ico" aria-hidden="true">🏛️</div>
+        <div class="notif-body">
+          <div class="notif-title">Ceremony Check-in Gate Open</div>
+          <div class="notif-text">Arrive 30 minutes early. Use QR check-in to join the queue.</div>
+        </div>
+        <div class="notif-meta">
+          <span class="status-pill status-pending">New</span>
+        </div>
+      </div>
+      <div class="notif-item hover-lift" data-notif="true">
+        <div class="notif-ico" aria-hidden="true">🤖</div>
+        <div class="notif-body">
+          <div class="notif-title">AI Identity Verification</div>
+          <div class="notif-text">Your face verification is pending. Keep your ID and face clearly visible.</div>
+        </div>
+        <div class="notif-meta">
+          <span class="status-pill status-review">Pending</span>
+        </div>
+      </div>
+      <div class="notif-item hover-lift" data-notif="true">
+        <div class="notif-ico" aria-hidden="true">📷</div>
+        <div class="notif-body">
+          <div class="notif-title">Camera Scan Required</div>
+          <div class="notif-text">Scan at the reporting gate. If scanning fails, re-align and try again.</div>
+        </div>
+        <div class="notif-meta">
+          <span class="status-pill status-pending">Tip</span>
+        </div>
+      </div>
+      <div class="notif-item hover-lift" data-notif="true">
+        <div class="notif-ico" aria-hidden="true">🎓</div>
+        <div class="notif-body">
+          <div class="notif-title">Graduation Week Events</div>
+          <div class="notif-text">Robe collection & rehearsal dates are in your schedule below.</div>
+        </div>
+        <div class="notif-meta">
+          <span class="status-pill status-approved">Upcoming</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" style="margin:28px 0; opacity:0.9;"/>
+
+    <h2 class="section-title" style="margin-bottom:28px;">Convocation <span>Verification Status</span></h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;animation:fadeUp 0.4s ease both;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,180,0.08);color:var(--accent);font-family:'DM Mono';font-size:0.85rem;">🤖</div>
+          <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;">Face Recognition</div>
+        </div>
+        <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:10px;">AI check result for identity</div>
+        <span class="status-pill status-review">Pending</span>
+        <div class="progress-bar-wrap" style="margin-top:14px;">
+          <div class="progress-bar" style="width:28%" data-width="28"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;animation:fadeUp 0.4s ease both;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,180,0.08);color:var(--accent);font-family:'DM Mono';font-size:0.85rem;">✅</div>
+          <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;">Student Attendance</div>
+        </div>
+        <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:10px;">Confirm presence for ceremony</div>
+        <span class="status-pill status-pending">Not Checked</span>
+        <div class="progress-bar-wrap" style="margin-top:14px;">
+          <div class="progress-bar" style="width:0%" data-width="0"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;animation:fadeUp 0.4s ease both;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(240,192,64,0.08);color:var(--gold);font-family:'DM Mono';font-size:0.85rem;">🎓</div>
+          <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;">Robe Collection</div>
+        </div>
+        <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:10px;">Status of robe handover</div>
+        <span class="status-pill status-review">Pending</span>
+        <div class="progress-bar-wrap" style="margin-top:14px;">
+          <div class="progress-bar" style="width:40%" data-width="40"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;animation:fadeUp 0.4s ease both;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(43,43,255,0.15);color:#7b8fff;font-family:'DM Mono';font-size:0.85rem;">💺</div>
+          <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;">Seat Registration</div>
+        </div>
+        <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:10px;">Assigned seating confirmation</div>
+        <span class="status-pill status-approved">Confirmed</span>
+        <div class="progress-bar-wrap" style="margin-top:14px;">
+          <div class="progress-bar" style="width:100%" data-width="100"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;animation:fadeUp 0.4s ease both;grid-column:1/-1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div style="min-width:260px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,180,0.08);color:var(--accent);font-family:'DM Mono';font-size:0.85rem;">📷</div>
+              <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;">QR Check-in Status</div>
+            </div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.45);">Scan-based check in for queue + entry</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="status-pill status-review">Pending</span>
+            <div style="font-family:'Bebas Neue';font-size:1.6rem;letter-spacing:2px;color:var(--accent);">#12</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Upcoming <span>Convocation Schedule</span></h2>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,180,0.08);color:var(--accent);font-family:'DM Mono';font-size:0.85rem;">🎽</div>
+          <div>
+            <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;margin-bottom:4px;">Robe Collection Date</div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.4);">12 Apr 2026 • Hall 2</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--gold)">09:00 AM</span>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(43,43,255,0.15);color:#7b8fff;font-family:'DM Mono';font-size:0.85rem;">🎤</div>
+          <div>
+            <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;margin-bottom:4px;">Convocation Rehearsal Date</div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.4);">12 Apr 2026 • Auditorium</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--accent)">11:00 AM</span>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,180,0.08);color:var(--accent);font-family:'DM Mono';font-size:0.85rem;">🕘</div>
+          <div>
+            <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;margin-bottom:4px;">Hall Entry Time</div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.4);">13 Apr 2026 • Main Entrance</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--gold)">12:30 PM</span>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(240,192,64,0.08);color:var(--gold);font-family:'DM Mono';font-size:0.85rem;">🧾</div>
+          <div>
+            <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;margin-bottom:4px;">Queue Reporting Time</div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.4);">13 Apr 2026 • Reporting Gate</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--accent)">01:00 PM</span>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(43,43,255,0.15);color:#7b8fff;font-family:'DM Mono';font-size:0.85rem;">🏛️</div>
+          <div>
+            <div style="font-family:'Syne';font-weight:700;font-size:0.95rem;margin-bottom:4px;">Ceremony Session Date &amp; Time</div>
+            <div style="font-family:'DM Mono';font-size:0.65rem;letter-spacing:1px;color:rgba(255,255,255,0.4);">13 Apr 2026 • Main Hall</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:2px;color:var(--gold)">02:00 PM</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT VIEW -->
+<div id="view-submit" class="view">
+  <div class="submit-page">
+    <h1 class="page-title">Submit <span>Project</span></h1>
+    <p class="page-sub">Fill in all fields carefully. You can only submit one project per category.</p>
+
+    <div class="form-card">
+      <form onsubmit="submitProject(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Project Title</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <input class="form-input" type="text" placeholder="Enter your project title" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Award Category</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
+              <select class="form-select form-input">
+                <option value="">Select a category</option>
+                <option>Best Big Data Project</option>
+                <option>Best ML Model</option>
+                <option>Best Visualisation</option>
+                <option>Technology Innovation</option>
+                <option>Best Research Paper</option>
+                <option>Industry Impact Award</option>
+                <option>Best NLP Application</option>
+                <option>Best Computer Vision</option>
+                <option>Emerging Talent</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Project Description</label>
+          <textarea class="form-textarea" placeholder="Describe your project, its objectives, methodology, and key outcomes..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Technologies Used</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <input class="form-input" type="text" placeholder="Python, TensorFlow, Spark...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">GitHub / Project Link</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              <input class="form-input" type="url" placeholder="https://github.com/...">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Upload Project Report (PDF)</label>
+          <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="upload-title" id="upload-title">Click to upload or drag & drop</div>
+            <div class="upload-sub">PDF, max 20MB</div>
+            <input type="file" id="file-input" accept=".pdf" style="display:none" onchange="handleFile(this)">
+          </div>
+        </div>
+
+        <button class="submit-btn" type="submit">Submit Project</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS VIEW -->
+<div id="view-results" class="view">
+  <div class="results-page">
+    <h1 class="page-title" style="font-family:'Bebas Neue';font-size:clamp(2rem,4vw,3rem);letter-spacing:3px;margin-bottom:8px;animation:fadeUp 0.5s ease both">My <span style="color:var(--accent)">Results</span></h1>
+    <p class="page-sub" style="font-size:0.9rem;color:var(--dim);margin-bottom:48px;animation:fadeUp 0.5s 0.1s ease both">Evaluation scores and status for your submissions.</p>
+
+    <div id="results-list"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+    </svg>
+    <span>SMARTCONVO</span>
+  </div>
+  <span class="footer-copy">© 2026 Dean's Award Ceremony. All rights reserved.</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const userName = localStorage.getItem('userName') || 'Student';
+const studentId = localStorage.getItem('studentId') || 'N/A';
+const userEmail = localStorage.getItem('userEmail') || '';
+
+document.getElementById('nav-user').textContent = userName;
+document.getElementById('dash-title').textContent = `Hello, ${userName.split(' ')[0]}`;
+document.getElementById('id-val').textContent = studentId;
+document.getElementById('id-email').textContent = userEmail;
+
+function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+// Fill sidebar footer with logged in user
+(function fillUser(){
+  try {
+    const storedUserName = localStorage.getItem('userName');
+    const raw = localStorage.getItem('smartconvo_user');
+    let smartconvoName = null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      smartconvoName = parsed?.name || parsed?.email || null;
+    }
+    const finalName = storedUserName || smartconvoName || 'Student';
+    const el = document.getElementById('sb-footer-name');
+    if (el) el.textContent = finalName;
+  } catch (e) {}
+})();
+
+
+function showView(view, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  btn.classList.add('active');
+  if (view === 'results') renderResults();
+  // animate any dashboard progress bars on open
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar').forEach(bar => {
+      const w = bar.getAttribute('data-width');
+      if (w != null) bar.style.width = w + '%';
+    });
+  }, 50);
+}
+
+
+function handleFile(input) {
+  if (input.files[0]) {
+    document.getElementById('upload-title').textContent = input.files[0].name;
+  }
+}
+
+function submitProject(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('.submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  setTimeout(() => {
+    btn.textContent = 'Submitted!';
+    showToast('Project submitted successfully!');
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Submit Project'; }, 3000);
+  }, 1500);
+}
+
+const resultsData = [
+  { title:'Big Data Pipeline for Traffic Prediction', cat:'Best Big Data Project', score:88, max:100, status:'review', tags:['Python','Apache Spark','Hadoop'] },
+  { title:'Sentiment Analysis Dashboard', cat:'Best NLP Application', score:74, max:100, status:'approved', tags:['BERT','Flask','React'] },
+];
+
+function renderResults() {
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+  resultsData.forEach((r, i) => {
+    const statusClass = r.status === 'approved' ? 'status-approved' : r.status === 'review' ? 'status-review' : 'status-pending';
+    const statusText = r.status === 'approved' ? 'Approved' : r.status === 'review' ? 'Under Review' : 'Pending';
+    list.innerHTML += `
+      <div class="result-card" style="animation-delay:${i*0.1}s">
+        <div class="result-header">
+          <div>
+            <div class="result-title">${r.title}</div>
+            <div class="result-cat">${r.cat}</div>
+          </div>
+          <div class="result-score">
+            <div class="result-score-val">${r.score}</div>
+            <div class="result-score-lbl">/ ${r.max}</div>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" data-width="${r.score}" style="width:0%"></div>
+        </div>
+        <div class="result-meta">
+          ${r.tags.map(t => `<span class="result-tag">${t}</span>`).join('')}
+          <span class="status-pill ${statusClass}" style="margin-left:auto">${statusText}</span>
+        </div>
+      </div>`;
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 100);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Optional live queue + notifications (smartconvo-storage simulation)
+function initLiveQueue(){
+  const el = document.getElementById('live-queue-number');
+  if(!el) return;
+
+  const tick = () => {
+    try {
+      const st = window.smartconvoStorage?.getState?.();
+      const rawStudentId = window.smartconvoStorage?.getState?.()?.queue?.queueItems;
+      // If storage simulation has queueItems, find current student
+      const storedStudentId = localStorage.getItem('studentId') || null;
+      const items = st?.queue?.queueItems || [];
+      const me = storedStudentId ? items.find(x => String(x.studentId) === String(storedStudentId) || String(x.id) === String(storedStudentId)) : null;
+
+      if(me?.queueNo){
+        el.textContent = me.queueNo;
+        return;
+      }
+
+      // fallback: deterministic pseudo queue number
+      const seq = (storedStudentId ? Number(String(storedStudentId).replace(/\D/g,'')) : 0) || 0;
+      el.textContent = (typeof st?.queue?.state?.seq === 'number' ? st.queue.state.seq + 1 : (seq % 30) + 1);
+    } catch(e){
+      el.textContent = '—';
+    }
+  };
+
+  tick();
+  setInterval(tick, 5000);
+}
+
+function renderNotifications(){
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+  try {
+    const st = window.smartconvoStorage?.getState?.();
+    const items = st?.notifications?.items || [];
+    if(!Array.isArray(items) || items.length === 0) return;
+
+    // Replace static items with dynamic ones (keep same layout classes)
+    const iconForRole = (role) => role === 'admin' ? '🏛️' : role === 'student' ? '🎓' : '🤖';
+
+    list.innerHTML = items.slice(0,4).map((n) => {
+      const role = n.role || 'guest';
+      const title = role === 'admin' ? 'Announcement' : (role === 'student' ? 'Update' : 'Verification');
+      const status = role === 'admin' ? 'New' : 'Pending';
+      const statusClass = role === 'admin' ? 'status-pending' : 'status-review';
+      return `
+        <div class="notif-item hover-lift" data-notif="true">
+          <div class="notif-ico" aria-hidden="true">${iconForRole(role)}</div>
+          <div class="notif-body">
+            <div class="notif-title">${title}</div>
+            <div class="notif-text">${n.message || ''}</div>
+          </div>
+          <div class="notif-meta">
+            <span class="status-pill ${statusClass}">${status}</span>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+initLiveQueue();
+renderNotifications();
+</script>
+</body>
+</html>

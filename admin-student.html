@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCONVO — Admin Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent: #00e5b4;
+  --accent2: #2B2BFF;
+  --bg: #06080b;
+  --fg: #e8eaf0;
+  --dim: rgba(255,255,255,0.6);
+  --dim2: rgba(255,255,255,0.2);
+  --line: rgba(255,255,255,0.08);
+  --card: rgba(255,255,255,0.03);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  overflow: auto;
+}
+
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.left {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 64px;
+  border-right: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  width: 48%;
+  flex-shrink: 0;
+}
+@media (min-width: 1024px) { .left { display: flex; } }
+
+.diagonal-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #2B2BFF 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.glow-orb {
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,229,180,0.12) 0%, transparent 70%);
+  bottom: -100px; left: -100px;
+  pointer-events: none;
+  animation: orb-pulse 6s ease-in-out infinite;
+}
+@keyframes orb-pulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+
+.left-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  animation: fadeDown 0.8s ease both;
+}
+.brand-icon { width: 32px; height: 32px; color: var(--accent); }
+.brand-name { font-family: 'Bebas Neue'; font-size: 1.5rem; letter-spacing: 6px; }
+
+.left-body { position: relative; z-index: 1; }
+
+.left-heading {
+  font-family: 'Bebas Neue';
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+.left-heading span { color: var(--accent); }
+
+.left-sub {
+  font-size: 0.95rem;
+  color: var(--dim);
+  line-height: 1.8;
+  max-width: 360px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+
+.left-stats {
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.stat-val {
+  font-family: 'Bebas Neue';
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-lbl {
+  font-family: 'DM Mono';
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
+}
+
+.ticker {
+  position: relative; z-index: 1;
+  margin-top: 32px;
+  overflow: hidden;
+  animation: fadeUp 0.8s 0.5s ease both;
+}
+.ticker-inner {
+  display: flex;
+  gap: 32px;
+  font-family: 'DM Mono';
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.3);
+  animation: ticker-scroll 20s linear infinite;
+  white-space: nowrap;
+}
+@keyframes ticker-scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-dot { color: var(--accent); }
+
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 32px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.right::before {
+  content:'';
+  position:absolute;
+  top:0; right:0;
+  width:60%; height:60%;
+  background: radial-gradient(ellipse at top right, rgba(43,43,255,0.07), transparent 70%);
+  pointer-events:none;
+}
+
+.right-inner { max-width: 420px; width: 100%; margin: 0 auto; position:relative; z-index:1; }
+
+.right-header { margin-bottom: 44px; animation: fadeUp 0.7s 0.1s ease both; }
+.right-title { font-family: 'Bebas Neue'; font-size: clamp(2.8rem, 6vw, 4rem); letter-spacing: 4px; margin-bottom: 8px; }
+.right-sub { font-size: 0.9rem; color: var(--dim); }
+
+.mobile-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 32px;
+  animation: fadeDown 0.6s ease both;
+}
+@media (min-width: 1024px) { .mobile-brand { display: none; } }
+.mobile-brand svg { width: 24px; height: 24px; color: var(--accent); }
+.mobile-brand span { font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 5px; }
+
+.form-wrap { animation: fadeUp 0.5s ease both; }
+
+.back-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: 'DM Mono'; font-size: 0.72rem; letter-spacing: 2px;
+  cursor: pointer; margin-bottom: 32px; padding: 0;
+  transition: color 0.3s;
+}
+.back-btn:hover { color: var(--accent); }
+.back-btn svg { width: 15px; height: 15px; stroke: currentColor; }
+
+.role-badg
